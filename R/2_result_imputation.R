@@ -1,6 +1,8 @@
 
 library(tidyverse)
 library(RColorBrewer)
+library(readxl)
+library(corrplot)
 
 
 # Raw data ---------------------------
@@ -36,6 +38,9 @@ Hum_imp_final <- Hum_imp %>% gather("imputation_technique", "value", -fecha_num)
 Temp_imp_final <- Temp_imp %>% gather("imputation_technique", "value", -fecha_num)
 
 
+# Plot imputation results-------------
+
+
 plot_imputation_hum <- ggplot(Hum_imp_final)+
   geom_line(aes(x = fecha_num, y = value, color = imputation_technique), size = 1)+
   scale_color_brewer(palette = "Paired")+
@@ -68,7 +73,7 @@ plot_imputation_temp_NN_RF <- ggplot(Temp_imp_final%>%
   theme_bw()
 
 
-
+# save plots
 
 png("figures/imputation_temperature.png",
     width = 11.69, # The width of the plot in inches
@@ -98,3 +103,26 @@ plot_imputation_hum_NN_RF
 # plot_annotation(tag_levels = c("I", "a"))
 dev.off()
 
+
+# Check correlation among external variables-------------
+
+corr_data <- tibble(fecha_num = Hum_imp_final$fecha_num[Hum_imp_final$imputation_technique == "IMNNI"],
+                    Hum_IMNNI = Hum_imp_final$value[Hum_imp_final$imputation_technique == "IMNNI"],
+                    Hum_missForest = Hum_imp_final$value[Hum_imp_final$imputation_technique == "missForest"],
+                    Temp_IMNNI = Temp_imp_final$value[Temp_imp_final$imputation_technique == "IMNNI"],
+                    Temp_missForest = Temp_imp_final$value[Temp_imp_final$imputation_technique == "missForest"])
+
+M <-cor(corr_data)
+corrplot(M, type="upper", order="hclust",
+         col=brewer.pal(n=5, name="RdYlBu"))
+
+# As expected, external humidity and temperature are highly correlated variables: -0.6933242 (pearson)
+
+ggplot(corr_data, aes(x = Hum_missForest, y = Temp_missForest, color = fecha_num))+
+  geom_point()+
+  geom_smooth(method = "lm", formula = y~x)+
+  theme_bw()
+
+
+cor.test(corr_data$Hum_missForest, corr_data$Temp_missForest, method=c("pearson"))
+cor.test(corr_data$Hum_missForest, corr_data$Temp_missForest, method=c("spearman"))
