@@ -79,7 +79,9 @@ imp <- missForest(datos, verbose = TRUE, variablewise = TRUE)
 imp$OOBerror
 sapply(datos,class)
 
-datoslimpio <- as.data.frame(imp$ximp)
+datoslimpio <- as.data.frame(imp$ximp) %>% rename(Hum_missForest = yna,
+                                                  Tem_missForest = zna,
+                                                  fecha_num = x)
 # View(datoslimpio)
 
 ################################################################################
@@ -88,5 +90,5 @@ datoslimpio <- as.data.frame(imp$ximp)
 
 # Save data
 export(datoslimpio,"processed_data/ImputacionDatosMF.xlsx")
-write_csv(ImputacionDatos,"processed_data/ImputacionDatosMF.csv")
+write_csv(datoslimpio,"processed_data/ImputacionDatosMF.csv")
 ####FIN CODIGO##################################################################
