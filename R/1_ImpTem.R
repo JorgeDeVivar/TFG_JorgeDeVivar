@@ -121,11 +121,13 @@ datos$yna[which(is.na(datos$yna))] = mean(datos$yna,na.rm = TRUE)
 # M?todo complejo con cart
 my_imp = mice(datos, m = 5, method = c("", "cart"), maxit =20)
 finalclean = complete(my_imp,5)
-
+finalclean <- finalclean %>% rename(mice_cart = yna, fecha_num = x)
 
 # M?todo complejo con pmm
 my_imppmm = mice(datos, m = 5, method = c("", "pmm"), maxit =20)
 finalcleanpmm = complete(my_imp,5)
+finalcleanpmm <- finalcleanpmm %>% rename(mice_pmm = yna) %>% select(mice_pmm)
+
 
 ################################################################################
 # Data Frame de imputaci?n de datos 
