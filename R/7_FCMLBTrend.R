@@ -83,7 +83,7 @@ head(temint_df)
 
 temint_df$lag12 <- lag(temint_df$y, n = 12)
 
-temint_df$trend <- 1:nrow(temint_df)
+temint_df$trend <- decompose(temperatura_interior_ts)$trend
 temint_df$trend_sqr <- temint_df$trend ^ 2
 
 h <- 627

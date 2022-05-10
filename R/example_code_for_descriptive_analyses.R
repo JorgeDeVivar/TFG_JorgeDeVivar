@@ -1,4 +1,3 @@
-
 library(tidyverse)
 library(readxl)
 library(lubridate)
@@ -24,11 +23,11 @@ dato_interior <- dato_interior[,c("Fecha","Humedad (%)","Temperatura (ºC)","val
 start_point <- c(year(min(dato_interior$Fecha)),month(min(dato_interior$Fecha)))
 unidades <- length(dato_interior$Fecha)# - 1
 humedad_interior_ts <- ts(data = dato_interior$`Humedad (%)`[1:unidades], 
-                          start = start_point,
+                          start = 0,#start_point,
                           frequency = 6*24)
 
 temperatura_interior_ts <- ts(data = dato_interior$`Temperatura (ºC)`[1:unidades], 
-                              start = start_point,
+                              start = 0,#start_point,
                               frequency = 6*24)
 
 humedad_interior_decomp <- decompose(humedad_interior_ts)
@@ -37,6 +36,7 @@ temperatura_interior_decomp <- decompose(temperatura_interior_ts)
 humedad_interior_detrend <- humedad_interior_ts - humedad_interior_decomp$trend
 temperatura_interior_detrend <- temperatura_interior_ts - temperatura_interior_decomp$trend
 
+par(mar=c(1,1,1,1))
 plot(humedad_interior_ts)
 plot(humedad_interior_decomp)
 plot(humedad_interior_detrend)
@@ -61,15 +61,15 @@ temperatura_df <- tibble(Fecha = dato_interior$Fecha,
                          Temperatura = dato_interior$`Temperatura (ºC)`)
 
 temperatura_detrend_df <- tibble(Fecha = dato_interior$Fecha,
-                         segundos = 60 * 10 * (as.numeric(rownames(dato_interior))-1),
-                         semana_muestreo = 1 + (segundos - (segundos %% (3600 *24*7)))/(3600 *24*7),
-                         segundo_muestreo_semana = segundos - (semana_muestreo-1) * (3600 *24*7),
-                         dia_muestreo = 1 + (segundos - (segundos %% (3600 *24)))/(3600 *24),
-                         segundo_muestreo_dia = segundos - (dia_muestreo-1) * (3600 *24),
-                         hora_muestreo_dia = floor(segundo_muestreo_dia/3600),
-                         minuto_muestreo_dia = floor(segundo_muestreo_dia/60),
-                         segundo_muestreo_hora = segundo_muestreo_dia - hora_muestreo_dia*3600,
-                         Temperatura = as.matrix(temperatura_interior_detrend))
+                                 segundos = 60 * 10 * (as.numeric(rownames(dato_interior))-1),
+                                 semana_muestreo = 1 + (segundos - (segundos %% (3600 *24*7)))/(3600 *24*7),
+                                 segundo_muestreo_semana = segundos - (semana_muestreo-1) * (3600 *24*7),
+                                 dia_muestreo = 1 + (segundos - (segundos %% (3600 *24)))/(3600 *24),
+                                 segundo_muestreo_dia = segundos - (dia_muestreo-1) * (3600 *24),
+                                 hora_muestreo_dia = floor(segundo_muestreo_dia/3600),
+                                 minuto_muestreo_dia = floor(segundo_muestreo_dia/60),
+                                 segundo_muestreo_hora = segundo_muestreo_dia - hora_muestreo_dia*3600,
+                                 Temperatura = as.matrix(temperatura_interior_detrend))
 
 ggplot(temperatura_df)+
   geom_line(aes(x = segundo_muestreo_semana, y = Temperatura, 
@@ -109,7 +109,7 @@ ggplot(temperatura_detrend_df)+
 
 ggplot(temperatura_df)+
   geom_boxplot(aes(x = as.factor(hora_muestreo_dia), y = Temperatura, 
-                color = as.factor(hora_muestreo_dia)))+
+                   color = as.factor(hora_muestreo_dia)))+
   theme_bw()+
   labs(x="Tiempo de muestreo [h]", y = "Temperatura [ºC]", color= NULL, title = "Temperatura")+
   theme(legend.position="none")

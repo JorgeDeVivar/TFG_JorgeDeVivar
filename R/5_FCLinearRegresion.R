@@ -6,6 +6,7 @@ library(forecast)
 library(readxl)
 library(stats)
 
+source("R/plot_lm.R")
 # Seasonality Analysis with Official Data
 # Ruta de la consola y guardar en variable
 ruta_excel <- "raw_data/OfficialData.xlsx"
@@ -36,45 +37,23 @@ ts_decompose(temperatura_interior_ts)
 tempint_df <- tibble(ds = dato_interior$Fecha,
                          segundos = 60 * 10 * (as.numeric(rownames(dato_interior))-1),
                          dia_muestreo = 1 + (segundos - (segundos %% (3600 *12)))/(3600 *12),
-                         seasonal = segundos - (dia_muestreo-1) * (3600 *12),
+                         segundos_dia_muestreo = segundos - (dia_muestreo-1) * (3600 *12),
                          y = dato_interior$`Temperatura (ºC)`)
 head(tempint_df)
 
-tempint_df$trend <- 1:nrow(tempint_df)
-#tempint_df$seasonal <- factor(month(tempint_df$ds, label = T), ordered = FALSE)
-#Seasonal es el día de muestreo
+tempint_df$trend <- decompose(temperatura_interior_ts)$trend
+tempint_df$seasonal <- decompose(temperatura_interior_ts)$seasonal
 
 h <- 627
 tempint_train <- tempint_df[1:(unidades - h), ]
 tempint_test <- tempint_df[(unidades - h + 1):unidades, ]
 
+# Regresion lineal con la tendencia
 md_trend <- lm(y ~ trend, data = tempint_train)
 summary(md_trend)
 
 tempint_train$yhat <- predict(md_trend, newdata = tempint_train)
 tempint_test$yhat <- predict(md_trend, newdata = tempint_test)
-
-plot_lm <- function (data, train, test, title = NULL){
-  p <- plot_ly(data = data,
-               x = ~ ds,
-               y = ~ y, 
-               type = "scatter",
-               mode = "line",
-               name = "Actual") %>%
-    add_lines(x = ~ train$ds,
-              y = ~ train$yhat,
-              line = list(color = "red"),
-              name = "Fitted") %>%
-    add_lines(x = ~ test$ds,
-              y = ~ test$yhat,
-              line = list(color = "green", dash = "dot", width = 3),
-              name = "Forecasted") %>%
-    layout(title = title,
-           xaxis = list(title = "Días"),
-           yaxis = list(title = "Temperatura (ºC)"),
-           legend = list (x = 0.05, y = 0.95))
-  return(p)
-}
 
 plot_lm(data = tempint_df,
         train = tempint_train,
@@ -85,6 +64,7 @@ mape_trend <- c(mean(abs(tempint_train$y - tempint_train$yhat)/ tempint_train$y)
                 mean(abs(tempint_test$y - tempint_test$yhat)/ tempint_test$y))
 mape_trend
 
+# Regresión lineal con la estacionalidad
 md_seasonal <- lm(y ~ seasonal, data = tempint_train)
 summary(md_seasonal)
 
@@ -100,6 +80,7 @@ mape_seasonal <- c(mean(abs(tempint_train$y - tempint_train$yhat)/ tempint_train
                    mean(abs(tempint_test$y - tempint_test$yhat)/ tempint_test$y))
 mape_seasonal
 
+# Regresion lineal con la tendencia y estacionalidad
 md1 <- lm(y ~ seasonal + trend, data = tempint_train)
 summary(md1)
 
@@ -115,6 +96,7 @@ mape_md1 <- c(mean(abs(tempint_train$y - tempint_train$yhat)/ tempint_train$y),
               mean(abs(tempint_test$y - tempint_test$yhat)/ tempint_test$y))
 mape_md1
 
+# Regresion lineal con Estacionalidad, tendencia y error?
 md2 <- lm(y ~ seasonal + trend + I(trend^2), data = tempint_train)
 summary(md2)
 
@@ -130,7 +112,7 @@ mape_md2 <- c(mean(abs(tempint_train$y - tempint_train$yhat)/ tempint_train$y),
               mean(abs(tempint_test$y - tempint_test$yhat)/ tempint_test$y))
 mape_md2
 
-
+# Regresion lineal tslm
 tempint_split <- ts_split(temperatura_interior_ts, sample.out = h)
 train.ts <- tempint_split$train
 test.ts <- tempint_split$test
