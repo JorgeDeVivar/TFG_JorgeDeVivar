@@ -317,3 +317,85 @@ ccf(x = humedad_interior_ts, y = humedad_exterior_ts, lag.max = 14)
 ccf_plot(x = humedad_interior_ts, y = humedad_exterior_ts, lags = 0:14)
 ccf(x = na.remove(humedad_interior_detrend), y = na.remove(humedad_exterior_detrend), lag.max = 14)
 ccf_plot(x = na.remove(humedad_interior_detrend), y = na.remove(humedad_exterior_detrend), lags = 0:14)
+
+
+# Seasonality Analysis with Official Data
+# Ruta de la consola y guardar en variable
+ruta_excel <- "raw_data/OfficialData.xlsx"
+ruta <- "raw_data/DatosTFG.xlsx"
+
+# Hojas del Excel
+excel_sheets(ruta_excel)
+
+# Importar los datos de la Hoja Exterior
+dato_exterior <- read_excel(ruta, sheet = "Exterior")
+dato_interior <- read_excel(ruta_excel, sheet = "Interior")
+
+# We set the day as unit of frequency, 3 data per hour
+unidades <- length(dato_interior$Fecha)
+humedad_interior_ts <- ts(data = dato_interior$`Humedad (%)`[1:unidades], 
+                          start = 1,
+                          frequency = 3*24)
+
+temperatura_interior_ts <- ts(data = dato_interior$`Temperatura (ºC)`[1:unidades],
+                              start = 1,
+                              frequency = 3*24)
+
+dioxidocarb_interior_ts <- ts(data = dato_interior$`valor CO2 (ppm)`[1:unidades],
+                              start = 1,
+                              frequency = 3*24)
+
+monoxidocarb_interior_ts <- ts(data = dato_interior$`valor CO (ppm)`[1:unidades],
+                               start = 1,
+                               frequency = 3*24)
+
+humedad_exterior_ts <- ts (data = dato_exterior$Humedad[1:unidades],
+                           start = 1,
+                           frequency = 3*24)
+
+temperatura_exterior_ts <- ts(data = dato_exterior$Temperatura[1:unidades],
+                              start = 1,
+                              frequency = 3*24)
+
+# Ts outputs
+ts_plot(humedad_interior_ts,
+        title = "Serie temporal de la humedad interior",
+        Ytitle = "Humedad interior",
+        Xtitle = "Días",
+        Xgrid = TRUE,
+        Ygrid = TRUE)
+
+ts_plot(temperatura_interior_ts,
+        title = "Serie temporal de la temperatura interior",
+        Ytitle = "Temperatura interior",
+        Xtitle = "Días",
+        Xgrid = TRUE,
+        Ygrid = TRUE)
+
+ts_plot(dioxidocarb_interior_ts,
+        title = "Serie temporal de la dióxido de carbono interior",
+        Ytitle = "Dióxido de carbono interior",
+        Xtitle = "Días",
+        Xgrid = TRUE,
+        Ygrid = TRUE)
+
+ts_plot(monoxidocarb_interior_ts,
+        title = "Serie temporal de la monóxido de carbono interior",
+        Ytitle = "Monóxido de carbono interior",
+        Xtitle = "Días",
+        Xgrid = TRUE,
+        Ygrid = TRUE)
+
+ts_plot(humedad_exterior_ts,
+        title = "Serie temporal de la humedad exterior",
+        Ytitle = "Humedad exterior",
+        Xtitle = "Días",
+        Xgrid = TRUE,
+        Ygrid = TRUE)
+
+ts_plot(temperatura_exterior_ts,
+        title = "Serie temporal de la temperatura exterior",
+        Ytitle = "Temperatura exterior",
+        Xtitle = "Días",
+        Xgrid = TRUE,
+        Ygrid = TRUE)
