@@ -13,6 +13,7 @@ library(tseries)
 library(tsbox)
 library(h2o)
 library(ggpubr)
+library(Metrics)
 
 source("R/plot_lm.R")
 # Ruta de la consola y guardar en variable
@@ -109,7 +110,7 @@ ts_cor(humedad_interior_ts)
 ts_cor(temperatura_interior_ts)
 ts_cor(dioxidocarb_interior_ts)
 ts_cor(monoxidocarb_interior_ts)
-ts_cor(humedad_exterior_ts)
+ts_cor(humedad_exterior_ts, lag.max = 144)
 ts_cor(temperatura_exterior_ts)
 # Se guardan
 
@@ -146,54 +147,39 @@ ur.kpss(temperatura_exterior_detrend) %>% summary()
 # Con esto ya serian todas estacionarias
 
 # ACF y PACF de las ts sin tendencia
-ts_cor(na.remove(humedad_interior_detrend))
-ts_cor(na.remove(temperatura_interior_detrend))
-ts_cor(na.remove(dioxido_interior_detrend))
-ts_cor(na.remove(monoxido_interior_detrend))
-ts_cor(na.remove(humedad_exterior_detrend))
-ts_cor(na.remove(temperatura_exterior_detrend))
+ts_cor(na.remove(humedad_interior_detrend), lag.max = 144)
+ts_cor(na.remove(temperatura_interior_detrend), lag.max = 144)
+ts_cor(na.remove(dioxido_interior_detrend), lag.max = 144)
+ts_cor(na.remove(monoxido_interior_detrend), lag.max = 144)
+ts_cor(na.remove(humedad_exterior_detrend), lag.max = 144)
+ts_cor(na.remove(temperatura_exterior_detrend), lag.max = 144)
 
 ## Lag analysis sirve para comprobar la autocorrelacion que hay entre los datos
-ts_lags(temperatura_interior_ts)
-ts_lags(temperatura_interior_detrend)
-ts_lags(humedad_interior_ts)
-ts_lags(humedad_interior_detrend)
-ts_lags(temperatura_exterior_ts)
-ts_lags(na.remove(temperatura_exterior_detrend))
-ts_lags(humedad_exterior_ts)
-ts_lags(na.remove(humedad_exterior_detrend))
-ts_lags(monoxidocarb_interior_ts)
-ts_lags(na.remove(monoxido_interior_detrend))
-ts_lags(dioxidocarb_interior_ts)
-ts_lags(na.remove(dioxido_interior_detrend))
+ts_lags(temperatura_interior_ts, lags = c(1, 33, 72,144))
+ts_lags(temperatura_interior_detrend, lags = c(1, 33, 72,144))
+ts_lags(humedad_interior_ts, lags = c(1, 33, 72,144))
+ts_lags(humedad_interior_detrend, lags = c(1, 33, 72,144))
+ts_lags(temperatura_exterior_ts, lags = c(1, 33, 72,144))
+ts_lags(na.remove(temperatura_exterior_detrend), lags = c(1, 33, 72,144))
+ts_lags(humedad_exterior_ts, lags = c(1, 33, 72,144))
+ts_lags(na.remove(humedad_exterior_detrend), lags = c(1, 33, 72,144))
+ts_lags(monoxidocarb_interior_ts, lags = c(1, 33, 72,144))
+ts_lags(na.remove(monoxido_interior_detrend), lags = c(1, 33, 72,144))
+ts_lags(dioxidocarb_interior_ts, lags = c(1, 33, 72,144))
+ts_lags(na.remove(dioxido_interior_detrend), lags = c(1, 33, 72,144))
 
 # Cross-correlation sirve para comprobar que haya relacion entre las distintas ts
 par(mar=c(1,1,1,1))
 
-ccf(x = temperatura_interior_ts, y = humedad_interior_ts, lag.max = 14)
-ccf_plot(x = temperatura_interior_ts, y = humedad_interior_ts, lags = 0:14)
-ccf(x = na.remove(temperatura_interior_detrend), y = na.remove(humedad_interior_detrend), lag.max = 14)
-ccf_plot(x = na.remove(temperatura_interior_detrend), y = na.remove(humedad_interior_detrend), lags = 0:14)
+acf(na.remove(temperatura_interior_detrend), lag.max = 72)
+ts_lags(na.remove(temperatura_interior_detrend), lags = c(33, 72, 144))
+ccf_plot(x = na.remove(temperatura_interior_detrend), y = na.remove(temperatura_interior_detrend), lags = c(1, 33, 72, 144))
 
-ccf(x = temperatura_interior_ts, y = dioxidocarb_interior_ts, lag.max = 14)
-ccf_plot(x = temperatura_interior_ts, y = dioxidocarb_interior_ts, lags = 0:14)
-ccf(x = na.remove(temperatura_interior_detrend), y = na.remove(dioxido_interior_detrend), lag.max = 14)
-ccf_plot(x = na.remove(temperatura_interior_detrend), y = na.remove(dioxido_interior_detrend), lags = 0:14)
+ccf_plot(x = na.remove(humedad_interior_detrend), y = na.remove(temperatura_interior_detrend), lags = c(1, 33, 72, 144))
 
-ccf(x = temperatura_interior_ts, y = monoxidocarb_interior_ts, lag.max = 14)
-ccf_plot(x = temperatura_interior_ts, y = monoxidocarb_interior_ts, lags = 0:14)
-ccf(x = na.remove(temperatura_interior_detrend), y = na.remove(monoxido_interior_detrend), lag.max = 14)
-ccf_plot(x = na.remove(temperatura_interior_detrend), y = na.remove(monoxido_interior_detrend), lags = 0:14)
+ccf_plot(x = na.remove(temperatura_exterior_detrend), y = na.remove(temperatura_interior_detrend), lags = c(1, 33, 72, 144))
 
-ccf(x = temperatura_interior_ts, y = temperatura_exterior_ts, lag.max = 14)
-ccf_plot(x = temperatura_interior_ts, y = temperatura_exterior_ts, lags = 0:14)
-ccf(x = na.remove(temperatura_interior_detrend), y = na.remove(temperatura_exterior_detrend), lag.max = 14)
-ccf_plot(x = na.remove(temperatura_interior_detrend), y = na.remove(temperatura_exterior_detrend), lags = 0:14)
-
-ccf(x = temperatura_interior_ts, y = humedad_exterior_ts, lag.max = 14)
-ccf_plot(x = temperatura_interior_ts, y = humedad_exterior_ts, lags = 0:14)
-ccf(x = na.remove(temperatura_interior_detrend), y = na.remove(humedad_exterior_detrend), lag.max = 14)
-ccf_plot(x = na.remove(temperatura_interior_detrend), y = na.remove(humedad_exterior_detrend), lags = 0:14)
+ccf_plot(x = na.remove(humedad_exterior_ts), y = na.remove(temperatura_interior_detrend), lags = c(1, 33, 72, 144))
 
 ######### A continuacion, se mostraran las predicciones de los datos anteriores
 # Se quiere predecir los datos de la temperatura interior
@@ -248,6 +234,7 @@ accuracy(md_trend)
 mape_trend <- c(mean(abs(tempint_train_RL_trend$y - tempint_train_RL_trend$yhat)/ tempint_train_RL_trend$y),
                 mean(abs(tempint_test_RL_trend$y - tempint_test_RL_trend$yhat)/ tempint_test_RL_trend$y))
 mape_trend
+
 
 
 # Solo la estacionalidad
@@ -333,7 +320,7 @@ final_fc <- arima(na.remove(ti_train),
                   method = "CSS")
 
 checkresiduals(final_fc)
-
+accuracy(ti_fc)
 ti_fc <- forecast(final_fc, h = 627)
 
 plot_forecast(ti_fc,
@@ -376,7 +363,7 @@ temint_dfMLGB <- tibble(date = dato_interior$Fecha,
                     segundos = 60 * 10 * (as.numeric(rownames(dato_interior))-1),
                     day = 1 + (segundos - (segundos %% (3600 *12)))/(3600 *12),
                     y = temperatura_interior_detrend)
-temint_dfMLGB$lag12 <- stats::lag(temint_dfMLGB$y, n = 12)
+temint_dfMLGB$lag12 <- stats::lag(temint_dfMLGB$y, n = 72)
 
 temint_dfMLGB$trend <- decompose(temperatura_interior_detrend)$trend
 temint_dfMLGB$seasonal <- decompose(temperatura_interior_detrend)$seasonal
@@ -424,7 +411,8 @@ Boosting Machine)",
 mape_gbm <- mean(abs(test_1$y - test_1$pred_gbm) / test_1$y)
 mape_gbm
 
-accuracy(train_h_MLGB)
+sqrt( sum( (test_1$y - test_1$pred_gbm)^2 , na.rm = TRUE ) / nrow(test_1) )
+sum((test_1$y - test_1$pred_gbm) , na.rm = TRUE) / nrow(test_1)
 
 ################################################################################
 
@@ -434,7 +422,7 @@ temint_dfMLAuto <- tibble(date = dato_interior$Fecha,
                     day = 1 + (segundos - (segundos %% (3600 *12)))/(3600 *12),
                     y = temperatura_interior_detrend)
 
-temint_dfMLAuto$lag12 <- lag(temint_df$y, n = 12)
+temint_dfMLAuto$lag12 <- lag(temint_df$y, n = 72)
 
 temint_dfMLAuto$trend <- decompose(temperatura_interior_detrend)$trend
 temint_dfMLAuto$seasonal <- decompose(temperatura_interior_detrend)$seasonal
@@ -476,6 +464,9 @@ plot_ly(data = test_2) %>%
 Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
+
+sqrt( sum( (test_2$y - test_2$pred_autoML)^2 , na.rm = TRUE ) / nrow(test_2) )
+sum((test_2$y - test_2$pred_autoML) , na.rm = TRUE) / nrow(test_2)
 ################################################################################
 
 ############################ Regresion lineal Multivariante DNE #############################################
@@ -795,6 +786,7 @@ mape_titehiheseasonal <- c(mean(abs(tempint_train_MRL_titehiheseas$y - tempint_t
                            mean(abs(tempint_test_MRL_titehiheseas$y - tempint_test_MRL_titehiheseas$yhat)/ tempint_test_MRL_titehiheseas$y))
 mape_titehiheseasonal
 
+accuracy(md_titehiheseasonal)
 # Se utiliza para la regresión lineal de la trend + seasonal 
 # temperatura exterior + temperatura interior + humedad interior + humedad exterior
 tempint_train_MRL_titehihetrendseas <- tempint_df_MRL[1:(unidades - h), ]
@@ -836,6 +828,8 @@ plot_lm(data = tempint_df_MRL,
 mape_md_titehihetrendseasonalerr <- c(mean(abs(tempint_train_MRL_titehihetrendseaserr$y - tempint_train_MRL_titehihetrendseaserr$yhat)/ tempint_train_MRL_titehihetrendseaserr$y),
                                       mean(abs(tempint_test_MRL_titehihetrendseaserr$y - tempint_test_MRL_titehihetrendseaserr$yhat)/ tempint_test_MRL_titehihetrendseaserr$y))
 mape_md_titehihetrendseasonalerr
+
+accuracy(md_titehihetrendseasonalerr)
 ################################################################################
 
 ############################ ARIMA Multivariante DNE #############################################
@@ -853,6 +847,7 @@ acf(resid(fit), 52)
 serial.test(fit, lags.pt = 12, type = "PT.adjusted")
 (fit.pr = predict(fit, n.ahead = 24, ci = 0.95))
 fanchart(fit.pr)
+
 ################################################################################
 
 ############################ Machine Learning GB Multivariante DNE #############
@@ -867,7 +862,7 @@ temint_df_MMLGB <- tibble(date = dato_interior$Fecha,
                     v = humedad_exterior_ts)
 head(temint_df)
 
-temint_df_MMLGB$lag12 <- stats::lag(temint_df_MMLGB$y, n = 12)
+temint_df_MMLGB$lag12 <- stats::lag(temint_df_MMLGB$y, n = 72)
 
 temint_df_MMLGB$trend <- decompose(temperatura_interior_detrend)$trend
 temint_df_MMLGB$trend_sqr <- temint_df$trend ^ 2
@@ -932,6 +927,8 @@ Boosting Machine",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
+sqrt( sum( (test_11$y - test_11$pred_gbm)^2 , na.rm = TRUE ) / nrow(test_11) )
+sum((test_11$y - test_11$pred_gbm) , na.rm = TRUE) / nrow(test_11)
 # Trend + lag + trend^2
 temint_train_MMLAuto_lagtitetrenderr <- temint_df_MMLGB[1:(unidades - h), ]
 temint_test_MMLAuto_lagtitetrenderr <- temint_df_MMLGB[(unidades - h + 1):unidades, ]
@@ -982,6 +979,8 @@ Boosting Machine)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
+sqrt( sum( (test_12$y - test_12$pred_gbm)^2 , na.rm = TRUE ) / nrow(test_12) )
+sum((test_12$y - test_12$pred_gbm) , na.rm = TRUE) / nrow(test_12)
 ########Temperatura exterior + temperatura interior + Humedad interior
 # Trend +lag
 temint_train_MMLAuto_lagtitehitrend <- temint_df_MMLGB[1:(unidades - h), ]
@@ -1033,6 +1032,8 @@ Boosting Machine)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
+sqrt( sum( (test_13$y - test_13$pred_gbm)^2 , na.rm = TRUE ) / nrow(test_13) )
+sum((test_13$y - test_13$pred_gbm) , na.rm = TRUE) / nrow(test_13)
 # Trend + lag + trend^2
 temint_train_MMLAuto_lagtitehitrenderr <- temint_df_MMLGB[1:(unidades - h), ]
 temint_test_MMLAuto_lagtitehitrenderr <- temint_df_MMLGB[(unidades - h + 1):unidades, ]
@@ -1083,6 +1084,8 @@ Boosting Machine)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
+sqrt( sum( (test_14$y - test_14$pred_gbm)^2 , na.rm = TRUE ) / nrow(test_14) )
+sum((test_14$y - test_14$pred_gbm) , na.rm = TRUE) / nrow(test_14)
 #Temperatura exterior + temperatura interior + Humedad interior + humedad exterior#
 # Trend +lag
 temint_train_MMLAuto_lagtitehihetrend <- temint_df_MMLGB[1:(unidades - h), ]
@@ -1132,6 +1135,8 @@ Boosting Machine)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
+sqrt( sum( (test_15$y - test_15$pred_gbm)^2 , na.rm = TRUE ) / nrow(test_15) )
+sum((test_15$y - test_15$pred_gbm) , na.rm = TRUE) / nrow(test_15)
 # Trend + lag + trend^2
 temint_train_MMLAuto_lagtitehihetrenderr <- temint_df_MMLGB[1:(unidades - h), ]
 temint_test_MMLAuto_lagtitehihetrenderr <- temint_df_MMLGB[(unidades - h + 1):unidades, ]
@@ -1182,6 +1187,8 @@ Boosting Machine)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
+sqrt( sum( (test_16$y - test_16$pred_gbm)^2 , na.rm = TRUE ) / nrow(test_16) )
+sum((test_16$y - test_16$pred_gbm) , na.rm = TRUE) / nrow(test_16)
 ################################################################################
 
 ############################ Machine Learning AutoML Multivariante DNE #############################################
@@ -1196,7 +1203,7 @@ temint_df_MMLAuto <- tibble(date = dato_interior$Fecha,
                           v = humedad_exterior_ts)
 head(temint_df_MMLAuto)
 
-temint_df_MMLAuto$lag12 <- lag(temint_df$y, n = 12)
+temint_df_MMLAuto$lag12 <- lag(temint_df$y, n = 72)
 
 temint_df_MMLAuto$trend <- decompose(temperatura_interior_ts)$trend
 temint_df_MMLAuto$trend_sqr <- temint_df$trend ^ 2
@@ -1256,6 +1263,8 @@ Model)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Días"))
 
+sqrt( sum( (test_21$y - test_21$pred_autoML)^2 , na.rm = TRUE ) / nrow(test_21) )
+sum((test_21$y - test_21$pred_autoML) , na.rm = TRUE) / nrow(test_21)
 # Trend + lag + trend^2
 temint_train_MMLAML_lagtetrenderr <- temint_df_MMLAuto[1:(unidades - h), ]
 temint_test_MMLAML_lagtetrenderr <- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
@@ -1297,6 +1306,9 @@ plot_ly(data = test_22) %>%
 Model)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Días"))
+
+sqrt( sum( (test_22$y - test_22$pred_autoML)^2 , na.rm = TRUE ) / nrow(test_22) )
+sum((test_22$y - test_22$pred_autoML) , na.rm = TRUE) / nrow(test_22)
 ########Temperatura exterior + temperatura interior + Humedad interior
 # Trend +lag
 temint_train_MMLAML_lagtitehitrend <- temint_df_MMLAuto[1:(unidades - h), ]
@@ -1340,6 +1352,8 @@ Model)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Días"))
 
+sqrt( sum( (test_23$y - test_23$pred_autoML)^2 , na.rm = TRUE ) / nrow(test_23) )
+sum((test_23$y - test_23$pred_autoML) , na.rm = TRUE) / nrow(test_23)
 # Trend + lag + trend^2
 temint_train_MMLAML_lagtitehitrenderr <- temint_df_MMLAuto[1:(unidades - h), ]
 temint_test_MMLAML_lagtitehitrenderr <- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
@@ -1382,6 +1396,8 @@ Model)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Días"))
 
+sqrt( sum( (test_24$y - test_24$pred_autoML)^2 , na.rm = TRUE ) / nrow(test_24) )
+sum((test_24$y - test_24$pred_autoML) , na.rm = TRUE) / nrow(test_24)
 #Temperatura exterior + temperatura interior + Humedad interior + humedad exterior
 # Trend +lag
 temint_train_MMLAML_lagtitehihetrend <- temint_df_MMLAuto[1:(unidades - h), ]
@@ -1425,6 +1441,8 @@ Model)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Días"))
 
+sqrt( sum( (test_25$y - test_25$pred_autoML)^2 , na.rm = TRUE ) / nrow(test_25) )
+sum((test_25$y - test_25$pred_autoML) , na.rm = TRUE) / nrow(test_25)
 # Trend + lag + trend^2
 temint_train_MMLAML_lagtitehihetrenderr <- temint_df_MMLAuto[1:(unidades - h), ]
 temint_test_MMLAML_lagtitehihetrenderr <- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
@@ -1467,4 +1485,6 @@ Model)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Días"))
 
+sqrt( sum( (test_26$y - test_26$pred_autoML)^2 , na.rm = TRUE ) / nrow(test_26) )
+sum((test_26$y - test_26$pred_autoML) , na.rm = TRUE) / nrow(test_26)
 ################################################################################
