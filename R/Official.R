@@ -155,31 +155,31 @@ ts_cor(na.remove(humedad_exterior_detrend), lag.max = 144)
 ts_cor(na.remove(temperatura_exterior_detrend), lag.max = 144)
 
 ## Lag analysis sirve para comprobar la autocorrelacion que hay entre los datos
-ts_lags(temperatura_interior_ts, lags = c(1, 33, 72,144))
-ts_lags(temperatura_interior_detrend, lags = c(1, 33, 72,144))
-ts_lags(humedad_interior_ts, lags = c(1, 33, 72,144))
-ts_lags(humedad_interior_detrend, lags = c(1, 33, 72,144))
-ts_lags(temperatura_exterior_ts, lags = c(1, 33, 72,144))
-ts_lags(na.remove(temperatura_exterior_detrend), lags = c(1, 33, 72,144))
-ts_lags(humedad_exterior_ts, lags = c(1, 33, 72,144))
-ts_lags(na.remove(humedad_exterior_detrend), lags = c(1, 33, 72,144))
-ts_lags(monoxidocarb_interior_ts, lags = c(1, 33, 72,144))
-ts_lags(na.remove(monoxido_interior_detrend), lags = c(1, 33, 72,144))
-ts_lags(dioxidocarb_interior_ts, lags = c(1, 33, 72,144))
-ts_lags(na.remove(dioxido_interior_detrend), lags = c(1, 33, 72,144))
+ts_lags(temperatura_interior_ts, lags = c(0, 33, 72,144))
+ts_lags(temperatura_interior_detrend, lags = c(0, 33, 72,144))
+ts_lags(humedad_interior_ts, lags = c(0, 33, 72,144))
+ts_lags(humedad_interior_detrend, lags = c(0, 33, 72,144))
+ts_lags(temperatura_exterior_ts, lags = c(0, 33, 72,144))
+ts_lags(na.remove(temperatura_exterior_detrend), lags = c(0, 33, 72,144))
+ts_lags(humedad_exterior_ts, lags = c(0, 33, 72,144))
+ts_lags(na.remove(humedad_exterior_detrend), lags = c(0, 33, 72,144))
+ts_lags(monoxidocarb_interior_ts, lags = c(0, 33, 72,144))
+ts_lags(na.remove(monoxido_interior_detrend), lags = c(0, 33, 72,144))
+ts_lags(dioxidocarb_interior_ts, lags = c(0, 33, 72,144))
+ts_lags(na.remove(dioxido_interior_detrend), lags = c(0, 33, 72,144))
 
 # Cross-correlation sirve para comprobar que haya relacion entre las distintas ts
 par(mar=c(1,1,1,1))
 
 acf(na.remove(temperatura_interior_detrend), lag.max = 72)
 ts_lags(na.remove(temperatura_interior_detrend), lags = c(33, 72, 144))
-ccf_plot(x = na.remove(temperatura_interior_detrend), y = na.remove(temperatura_interior_detrend), lags = c(1, 33, 72, 144))
+ccf_plot(x = na.remove(temperatura_interior_detrend), y = na.remove(temperatura_interior_detrend), lags = c(0, 33, 72, 144))
 
-ccf_plot(x = na.remove(humedad_interior_detrend), y = na.remove(temperatura_interior_detrend), lags = c(1, 33, 72, 144))
+ccf_plot(x = na.remove(humedad_interior_detrend), y = na.remove(temperatura_interior_detrend), lags = c(0, 33, 72, 144))
 
-ccf_plot(x = na.remove(temperatura_exterior_detrend), y = na.remove(temperatura_interior_detrend), lags = c(1, 33, 72, 144))
+ccf_plot(x = na.remove(temperatura_exterior_detrend), y = na.remove(temperatura_interior_detrend), lags = c(0, 33, 72, 144))
 
-ccf_plot(x = na.remove(humedad_exterior_ts), y = na.remove(temperatura_interior_detrend), lags = c(1, 33, 72, 144))
+ccf_plot(x = na.remove(humedad_exterior_ts), y = na.remove(temperatura_interior_detrend), lags = c(0, 33, 72, 144))
 
 ######### A continuacion, se mostraran las predicciones de los datos anteriores
 # Se quiere predecir los datos de la temperatura interior
@@ -230,12 +230,8 @@ plot_lm(data = tempint_df,
         train = tempint_train_RL_trend,
         test = tempint_test_RL_trend,
         title = "Predicción de la tendencia de la serie")
+
 accuracy(md_trend)
-mape_trend <- c(mean(abs(tempint_train_RL_trend$y - tempint_train_RL_trend$yhat)/ tempint_train_RL_trend$y),
-                mean(abs(tempint_test_RL_trend$y - tempint_test_RL_trend$yhat)/ tempint_test_RL_trend$y))
-mape_trend
-
-
 
 # Solo la estacionalidad
 tempint_train_RL_seas <- tempint_df[1:(unidades - h), ]
@@ -247,10 +243,8 @@ plot_lm(data = tempint_df,
         train = tempint_train_RL_seas,
         test = tempint_test_RL_seas,
         title = "Predicción de la tendencia de la serie")
+
 accuracy(md_seasonal)
-mape_seasonal <- c(mean(abs(tempint_train_RL_seas$y - tempint_train_RL_seas$yhat)/ tempint_train_RL_seas$y),
-                   mean(abs(tempint_test_RL_seas$y - tempint_test_RL_seas$yhat)/ tempint_test_RL_seas$y))
-mape_seasonal
 
 # Regresion lineal con la tendencia y estacionalidad
 tempint_train_RL_trendseas <- tempint_df[1:(unidades - h), ]
@@ -263,11 +257,8 @@ plot_lm(data = tempint_df,
         train = tempint_train_RL_trendseas,
         test = tempint_test_RL_trendseas,
         title = "Predicción de la tendencia y estacionalidad de la serie")
-accuracy(md1)
 
-mape_md1 <- c(mean(abs(tempint_train_RL_trendseas$y - tempint_train_RL_trendseas$yhat)/ tempint_train_RL_trendseas$y),
-              mean(abs(tempint_test_RL_trendseas$y - tempint_test_RL_trendseas$yhat)/ tempint_test_RL_trendseas$y))
-mape_md1
+accuracy(md1)
 
 # Regresion lineal con Estacionalidad, tendencia y error
 tempint_train_RL_trendseasruid <- tempint_df[1:(unidades - h), ]
@@ -282,11 +273,8 @@ plot_lm(data = tempint_df,
         train = tempint_train_RL_trendseasruid,
         test = tempint_test_RL_trendseasruid,
         title = "Predicción de la tendencia y estacionalidad de la serie")
-accuracy(md2)
 
-mape_md2 <- c(mean(abs(tempint_train_RL_trendseasruid$y - tempint_train_RL_trendseasruid$yhat)/ tempint_train_RL_trendseasruid$y),
-              mean(abs(tempint_test_RL_trendseasruid$y - tempint_test_RL_trendseasruid$yhat)/ tempint_test_RL_trendseasruid$y))
-mape_md2
+accuracy(md2)
 
 ################################################################################
 
@@ -351,6 +339,7 @@ ti_auto_md2 <- auto.arima(ti_train,
                           approximation = FALSE)
 
 ti_test_auto2 <- forecast(ti_autoarima_md2, h = 627)
+
 accuracy(ti_autoarima_md2)
 
 test_forecast(diff(temperatura_interior_ts),
@@ -407,9 +396,6 @@ plot_ly(data = test_1) %>%
 Boosting Machine)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
-
-mape_gbm <- mean(abs(test_1$y - test_1$pred_gbm) / test_1$y)
-mape_gbm
 
 sqrt( sum( (test_1$y - test_1$pred_gbm)^2 , na.rm = TRUE ) / nrow(test_1) )
 sum((test_1$y - test_1$pred_gbm) , na.rm = TRUE) / nrow(test_1)
@@ -511,9 +497,6 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_te,
         title = "Predicción MRL con Temperatura Exterior")
 
-mape_te <- c(mean(abs(tempint_train_MRL_te$y - tempint_train_MRL_te$yhat)/ tempint_train_MRL_te$y),
-             mean(abs(tempint_test_MRL_te$y - tempint_test_MRL_te$yhat)/ tempint_test_MRL_te$y))
-mape_te
 accuracy(md_te)
 
 # Se utiliza para la regresión lineal la trend de la temperatura exterior
@@ -531,9 +514,6 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_tetrend,
         title = "Predicción de la tendencia de la serie")
 
-mape_seasonal <- c(mean(abs(tempint_train_MRL_tetrend$y - tempint_train_MRL_tetrend$yhat)/ tempint_train_MRL_tetrend$y),
-                   mean(abs(tempint_test_MRL_tetrend$y - tempint_test_MRL_tetrend$yhat)/ tempint_test_MRL_tetrend$y))
-mape_seasonal
 accuracy(md_tetrend)
 
 # Regresión lineal con datos temperatura exterior season and trend 
@@ -551,10 +531,8 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_tetrendseas,
         title = "Predicción con la tendencia y estacionalidad de la TE")
 
-mape_md_tetrendseasonal <- c(mean(abs(tempint_train_MRL_tetrendseas$y - tempint_train_MRL_tetrendseas$yhat)/ tempint_train_MRL_tetrendseas$y),
-                             mean(abs(tempint_test_MRL_tetrendseas$y - tempint_test_MRL_tetrendseas$yhat)/ tempint_test_MRL_tetrendseas$y))
-mape_md_tetrendseasonal
 accuracy(md_tetrendseasonal)
+
 # Regresión lineal con datos temperatura exterior season and trend con error
 tempint_train_MRL_tetrendseaserr <- tempint_df_MRL[1:(unidades - h), ]
 tempint_test_MRL_tetrendseaserr <- tempint_df_MRL[(unidades - h + 1):unidades, ]
@@ -570,9 +548,6 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_tetrendseaserr,
         title = "Predicción con la tendencia, estacionalidad y error de la TE")
 
-mape_md_tetrendseasonalerr <- c(mean(abs(tempint_train_MRL_tetrendseaserr$y - tempint_train_MRL_tetrendseaserr$yhat)/ tempint_train_MRL_tetrendseaserr$y),
-                                mean(abs(tempint_test_MRL_tetrendseaserr$y - tempint_test_MRL_tetrendseaserr$yhat)/ tempint_test_MRL_tetrendseaserr$y))
-mape_md_tetrendseasonalerr
 accuracy(md_tetrendseasonalerr)
 
 ######################## Temperatura exterior e interior
@@ -592,10 +567,8 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_titetrend,
         title = "Predicción con la tendencia de la TE y TI")
 
-mape_tite <- c(mean(abs(tempint_train_MRL_titetrend$y - tempint_train_MRL_titetrend$yhat)/ tempint_train_MRL_titetrend$y),
-               mean(abs(tempint_test_MRL_titetrend$y - tempint_test_MRL_titetrend$yhat)/ tempint_test_MRL_titetrend$y))
-mape_tite
 accuracy(md_tite)
+
 # Se utiliza para la regresión lineal los datos de seasonal
 # temperatura interior + temperatura exterior
 tempint_train_MRL_titeseasonal <- tempint_df_MRL[1:(unidades - h), ]
@@ -612,9 +585,6 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_titeseasonal,
         title = "Predicción con la estacionalidad de TE y TI")
 
-mape_titeseasonal <- c(mean(abs(tempint_train_MRL_titeseasonal$y - tempint_train_MRL_titeseasonal$yhat)/ tempint_train_MRL_titeseasonal$y),
-                       mean(abs(tempint_test_MRL_titeseasonal$y - tempint_test_MRL_titeseasonal$yhat)/ tempint_test_MRL_titeseasonal$y))
-mape_titeseasonal
 accuracy(md_titeseasonal)
 
 # Se utiliza para la regresión lineal de la trend + seasonal 
@@ -633,10 +603,8 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_titetrendseas,
         title = "Predicción de la tendencia de la serie")
 
-mape_md_titetrendseasonal <- c(mean(abs(tempint_train_MRL_titetrendseas$y - tempint_train_MRL_titetrendseas$yhat)/ tempint_train_MRL_titetrendseas$y),
-                               mean(abs(tempint_test_MRL_titetrendseas$y - tempint_test_MRL_titetrendseas$yhat)/ tempint_test_MRL_titetrendseas$y))
-mape_md_titetrendseasonal
 accuracy(md_titetrendseasonal)
+
 # Regresión lineal con datos seasonal and trend and error
 # temperatura exterior + temperatura interior
 tempint_train_MRL_titetrendseaserr <- tempint_df_MRL[1:(unidades - h), ]
@@ -654,9 +622,6 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_titetrendseaserr,
         title = "Predicción de la tendencia de la serie")
 
-mape_md_titetrendseasonalerr <- c(mean(abs(tempint_train_MRL_titetrendseaserr$y - tempint_train_MRL_titetrendseaserr$yhat)/ tempint_train_MRL_titetrendseaserr$y),
-                                  mean(abs(tempint_test_MRL_titetrendseaserr$y - tempint_test_MRL_titetrendseaserr$yhat)/ tempint_test_MRL_titetrendseaserr$y))
-mape_md_titetrendseasonalerr
 accuracy(md_titetrendseasonalerr)
 
 ############Temperatura exterior, interior y humedad interior
@@ -676,10 +641,8 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_titehitrend,
         title = "Predicción con las tendencias de la TE, TI y HI")
 
-mape_titehi <- c(mean(abs(tempint_train_MRL_titehitrend$y - tempint_train_MRL_titehitrend$yhat)/ tempint_train_MRL_titehitrend$y),
-                 mean(abs(tempint_test_MRL_titehitrend$y - tempint_test_MRL_titehitrend$yhat)/ tempint_test_MRL_titehitrend$y))
-mape_titehi
 accuracy(md_titehi)
+
 # Se utiliza para la regresión lineal los datos de seasonal
 # temperatura interior + temperatura exterior + humedad interior
 tempint_train_MRL_titehiseasonal <- tempint_df_MRL[1:(unidades - h), ]
@@ -697,9 +660,7 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_titehiseasonal,
         title = "Predicción de la tendencia de la serie")
 
-mape_titehiseasonal <- c(mean(abs(tempint_train_MRL_titehiseasonal$y - tempint_train_MRL_titehiseasonal$yhat)/ tempint_train_MRL_titehiseasonal$y),
-                         mean(abs(tempint_test_MRL_titehiseasonal$y - tempint_test_MRL_titehiseasonal$yhat)/ tempint_test_MRL_titehiseasonal$y))
-mape_titehiseasonal
+accuracy(md_titehiseasonal)
 
 # Se utiliza para la regresión lineal de la trend + seasonal 
 # temperatura exterior + temperatura interior + humedad interior
@@ -718,10 +679,8 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_titehitrendseas,
         title = "Predicción de la tendencia de la serie")
 
-mape_md_titehitrendseasonal <- c(mean(abs(tempint_train_MRL_titehitrendseas$y - tempint_train_MRL_titehitrendseas$yhat)/ tempint_train_MRL_titehitrendseas$y),
-                                 mean(abs(tempint_test_MRL_titehitrendseas$y - tempint_test_MRL_titehitrendseas$yhat)/ tempint_test_MRL_titehitrendseas$y))
-mape_md_titehitrendseasonal
 accuracy(md_titehitrendseasonal)
+
 # Regresión lineal con datos seasonal and trend and error
 # temperatura exterior + temperatura interior + humedad interior
 tempint_train_MRL_titehitrendseaserr <- tempint_df_MRL[1:(unidades - h), ]
@@ -739,9 +698,7 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_titehitrendseaserr,
         title = "Predicción de la tendencia, estacionalidad y error de la TI, TE y HI")
 
-mape_md_titehitrendseasonalerr <- c(mean(abs(tempint_train_MRL_titehitrendseaserr$y - tempint_train_MRL_titehitrendseaserr$yhat)/ tempint_train_MRL_titehitrendseaserr$y),
-                                    mean(abs(tempint_test_MRL_titehitrendseaserr$y - tempint_test_MRL_titehitrendseaserr$yhat)/ tempint_test_MRL_titehitrendseaserr$y))
-mape_md_titehitrendseasonalerr
+accuracy(md_titehitrendseasonalerr)
 
 ############Temperatura exterior, interior y humedad interior, exterior
 # Se utiliza para la regresión lineal los datos de trend 
@@ -761,10 +718,8 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_titehihetrend,
         title = "Predicción con las tendencias de TI, TE, HI y HE")
 
-mape_titehihe <- c(mean(abs(tempint_train_MRL_titehihetrend$y - tempint_train_MRL_titehihetrend$yhat)/ tempint_train_MRL_titehihetrend$y),
-                   mean(abs(tempint_test_MRL_titehihetrend$y - tempint_test_MRL_titehihetrend$yhat)/ tempint_test_MRL_titehihetrend$y))
-mape_titehihe
 accuracy(md_titehihe)
+
 # Se utiliza para la regresión lineal los datos de seasonal
 # temperatura interior + temperatura exterior + humedad interior + humedad exterior
 tempint_train_MRL_titehiheseas <- tempint_df_MRL[1:(unidades - h), ]
@@ -782,11 +737,8 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_titehiheseas,
         title = "Predicción con la estacionalidad de TI, TE, HI y HE")
 
-mape_titehiheseasonal <- c(mean(abs(tempint_train_MRL_titehiheseas$y - tempint_train_MRL_titehiheseas$yhat)/ tempint_train_MRL_titehiheseas$y),
-                           mean(abs(tempint_test_MRL_titehiheseas$y - tempint_test_MRL_titehiheseas$yhat)/ tempint_test_MRL_titehiheseas$y))
-mape_titehiheseasonal
-
 accuracy(md_titehiheseasonal)
+
 # Se utiliza para la regresión lineal de la trend + seasonal 
 # temperatura exterior + temperatura interior + humedad interior + humedad exterior
 tempint_train_MRL_titehihetrendseas <- tempint_df_MRL[1:(unidades - h), ]
@@ -804,10 +756,8 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_titehihetrendseas,
         title = "Predicción de la tendencia de la serie")
 
-mape_md_titehihetrendseasonal <- c(mean(abs(tempint_train_MRL_titehihetrendseas$y - tempint_train_MRL_titehihetrendseas$yhat)/ tempint_train_MRL_titehihetrendseas$y),
-                                   mean(abs(tempint_test_MRL_titehihetrendseas$y - tempint_test_MRL_titehihetrendseas$yhat)/ tempint_test_MRL_titehihetrendseas$y))
-mape_md_titehihetrendseasonal
 accuracy(md_titehihetrendseasonal)
+
 # Regresión lineal con datos seasonal and trend and error
 # temperatura exterior + temperatura interior + humedad interior + humedad exterior
 tempint_train_MRL_titehihetrendseaserr <- tempint_df_MRL[1:(unidades - h), ]
@@ -825,11 +775,8 @@ plot_lm(data = tempint_df_MRL,
         test = tempint_test_MRL_titehihetrendseaserr,
         title = "Predicción de la tendencia de la serie")
 
-mape_md_titehihetrendseasonalerr <- c(mean(abs(tempint_train_MRL_titehihetrendseaserr$y - tempint_train_MRL_titehihetrendseaserr$yhat)/ tempint_train_MRL_titehihetrendseaserr$y),
-                                      mean(abs(tempint_test_MRL_titehihetrendseaserr$y - tempint_test_MRL_titehihetrendseaserr$yhat)/ tempint_test_MRL_titehihetrendseaserr$y))
-mape_md_titehihetrendseasonalerr
-
 accuracy(md_titehihetrendseasonalerr)
+
 ################################################################################
 
 ############################ ARIMA Multivariante DNE #############################################
