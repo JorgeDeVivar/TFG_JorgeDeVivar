@@ -44,10 +44,11 @@ Temp_imp_final <- Temp_imp %>% gather("imputation_technique", "value", -fecha_nu
 plot_imputation_hum <- ggplot(Hum_imp_final)+
   geom_line(aes(x = fecha_num, y = value, color = imputation_technique), size = 1)+
   scale_color_brewer(palette = "Paired")+
-  facet_wrap(~imputation_technique)+
+  facet_wrap(~imputation_technique,ncol=2)+
   geom_line(data = dato_exterior, aes(x = FechaNum, y = Humedad), size = 1)+
-  theme_bw()
-
+  theme_bw()+
+  labs(x="Tiempo (s)", y="Porcentaje de humedad (%)",color="Técnica de\nimputación")+
+  
 plot_imputation_temp <- ggplot(Temp_imp_final)+
   geom_line(aes(x = fecha_num, y = value, color = imputation_technique), size = 1)+
   scale_color_brewer(palette = "Paired")+
