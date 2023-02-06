@@ -60,7 +60,11 @@ md2 <- auto.arima(train,
 summary(md2)
 checkresiduals(md2)
 fc1 <- forecast(md1, newdata = test_df)
-fc2 <- forecast(md2, xreg = cbind(test_df$trend,
-                                  test_df$seasonal))
+
+test_model <- cbind(test_df$trend,
+                    test_df$seasonal)
+
+fc2 <- forecast(md2, xreg = na.omit(test_model))
 forecast::accuracy(fc1, test)
 forecast::accuracy(fc2, test)
+plot(fc2)
