@@ -80,13 +80,13 @@ ur.kpss(temperatura_exterior_ts) %>% summary()
 
 # Se comprueba con ACF y PACF
 ts_cor(humedad_interior_ts, lag.max = 72) # Fuerte tendencia
-ts_cor(temperatura_interior_ts, lag.max = 72) # Fuerte tendencia
+ts_cor(temperatura_interior_ts, lag.max = 504) # Fuerte tendencia
 ts_cor(humedad_exterior_ts, lag.max = 72) # Tendencia y estacionalidad
 ts_cor(temperatura_exterior_ts, lag.max = 72) # Tendencia y estacionalidad
 # Se guardan
 
 ## Lag analysis sirve para comprobar la autocorrelacion que hay entre los datos
-ts_lags(temperatura_interior_ts, lags = c(1, 33, 72,144))
+ts_lags(temperatura_interior_ts, lags = c(1, 33, 72,144,216))
 
 # Cross-correlation sirve para comprobar que haya relacion entre las distintas ts
 correlacion <- data.frame( 
@@ -122,20 +122,20 @@ head(tempint_df)
 
 df$trend <- decompose(temperatura_interior_ts)$trend
 df$seasonal <- decompose(temperatura_interior_ts)$seasonal
-df$lag72 <- dplyr::lag(df$y, n = 72)
-df$trend_sqr <- temint_df$trend ^ 2
+df$lag72 <- dplyr::lag(as.numeric(df$y), n = 72)
+df$trend_sqr <- (decompose(temperatura_interior_ts)$trend)^2
 
 df$tetrend <- decompose(temperatura_exterior_ts)$trend
 df$teseasonal <- decompose(temperatura_exterior_ts)$seasonal
-df$tetrend_sqr <- temint_df$tetrend ^ 2
+df$tetrend_sqr <- (decompose(temperatura_exterior_ts)$trend^2)
 
 df$hitrend <- decompose(humedad_interior_ts)$trend
 df$hiseasonal <- decompose(humedad_interior_ts)$seasonal
-df$hitrend_sqr <- temint_df$hitrend ^ 2
+df$hitrend_sqr <- (decompose(humedad_interior_ts)$trend^2)
 
 df$hetrend <- decompose(humedad_exterior_ts)$trend
 df$heseasonal <- decompose(humedad_exterior_ts)$seasonal
-df$hetrend_sqr <- temint_df$hetrend ^ 2
+df$hetrend_sqr <- (decompose(humedad_exterior_ts)$trend^2)
 h <- 627
 
 par <- ts_split(ts.obj = temperatura_interior_ts, sample.out = h)
@@ -281,9 +281,9 @@ summary(md2_7)
 checkresiduals(md2_7)
 fc1_7 <- forecast(md1_7, newdata = test_df)
 
-test_model_7 <- cbind(train_df$trend,
-                      train_df$seasonal,
-                      train_df$lag72)
+test_model_7 <- cbind(test_df$trend,
+                      test_df$seasonal,
+                      test_df$lag72)
 
 fc2_7 <- forecast(md2_7, xreg = na.omit(test_model_7))
 forecast::accuracy(fc1_7, test)
@@ -306,10 +306,10 @@ summary(md2_8)
 checkresiduals(md2_8)
 fc1_8 <- forecast(md1_8, newdata = test_df)
 
-test_model_8 <- cbind(train_df$trend,
-                      train_df$seasonal,
-                      train_df$lag72,
-                      train_df$trend_sqr)
+test_model_8 <- cbind(test_df$trend,
+                      test_df$seasonal,
+                      test_df$lag72,
+                      test_df$trend_sqr)
 
 fc2_8 <- forecast(md2_8, xreg = na.omit(test_model_8))
 forecast::accuracy(fc1_8, test)
@@ -335,11 +335,11 @@ summary(md2_9)
 checkresiduals(md2_9)
 fc1_9 <- forecast(md1_9, newdata = test_df)
 
-test_model_9 <- cbind(train_df$trend,
-                      train_df$seasonal,
-                      train_df$lag72,
-                      train_df$trend_sqr,
-                      train_df$hitrend)
+test_model_9 <- cbind(test_df$trend,
+                      test_df$seasonal,
+                      test_df$lag72,
+                      test_df$trend_sqr,
+                      test_df$hitrend)
 
 fc2_9 <- forecast(md2_9, xreg = na.omit(test_model_9))
 forecast::accuracy(fc1_9, test)
@@ -366,12 +366,12 @@ summary(md2_10)
 checkresiduals(md2_10)
 fc1_10 <- forecast(md1_10, newdata = test_df)
 
-test_model_10 <- cbind(train_df$trend,
-                       train_df$seasonal,
-                       train_df$lag72,
-                       train_df$trend_sqr,
-                       train_df$hitrend,
-                       train_df$hiseasonal)
+test_model_10 <- cbind(test_df$trend,
+                       test_df$seasonal,
+                       test_df$lag72,
+                       test_df$trend_sqr,
+                       test_df$hitrend,
+                       test_df$hiseasonal)
 
 fc2_10 <- forecast(md2_10, xreg = na.omit(test_model_10))
 forecast::accuracy(fc1_10, test)
@@ -399,13 +399,13 @@ summary(md2_11)
 checkresiduals(md2_11)
 fc1_11 <- forecast(md1_11, newdata = test_df)
 
-test_model_11 <- cbind(train_df$trend,
-                       train_df$seasonal,
-                       train_df$lag72,
-                       train_df$trend_sqr,
-                       train_df$hitrend,
-                       train_df$hiseasonal,
-                       train_df$hitrend_sqr)
+test_model_11 <- cbind(test_df$trend,
+                       test_df$seasonal,
+                       test_df$lag72,
+                       test_df$trend_sqr,
+                       test_df$hitrend,
+                       test_df$hiseasonal,
+                       test_df$hitrend_sqr)
 
 fc2_11 <- forecast(md2_11, xreg = na.omit(test_model_11))
 forecast::accuracy(fc1_11, test)
@@ -431,11 +431,11 @@ summary(md2_12)
 checkresiduals(md2_12)
 fc1_12 <- forecast(md1_12, newdata = test_df)
 
-test_model_12 <- cbind(train_df$trend,
-                       train_df$seasonal,
-                       train_df$lag72,
-                       train_df$trend_sqr,
-                       train_df$tetrend)
+test_model_12 <- cbind(test_df$trend,
+                       test_df$seasonal,
+                       test_df$lag72,
+                       test_df$trend_sqr,
+                       test_df$tetrend)
 
 fc2_12 <- forecast(md2_12, xreg = na.omit(test_model_12))
 forecast::accuracy(fc1_12, test)
@@ -462,12 +462,12 @@ summary(md2_13)
 checkresiduals(md2_13)
 fc1_13 <- forecast(md1_13, newdata = test_df)
 
-test_model_13 <- cbind(train_df$trend,
-                       train_df$seasonal,
-                       train_df$lag72,
-                       train_df$trend_sqr,
-                       train_df$tetrend,
-                       train_df$teseasonal)
+test_model_13 <- cbind(test_df$trend,
+                       test_df$seasonal,
+                       test_df$lag72,
+                       test_df$trend_sqr,
+                       test_df$tetrend,
+                       test_df$teseasonal)
 
 fc2_13 <- forecast(md2_13, xreg = na.omit(test_model_13))
 forecast::accuracy(fc1_13, test)
@@ -495,13 +495,13 @@ summary(md2_14)
 checkresiduals(md2_14)
 fc1_14 <- forecast(md1_14, newdata = test_df)
 
-test_model_14 <- cbind(train_df$trend,
-                       train_df$seasonal,
-                       train_df$lag72,
-                       train_df$trend_sqr,
-                       train_df$tetrend,
-                       train_df$teseasonal,
-                       train_df$tetrend_sqr)
+test_model_14 <- cbind(test_df$trend,
+                       test_df$seasonal,
+                       test_df$lag72,
+                       test_df$trend_sqr,
+                       test_df$tetrend,
+                       test_df$teseasonal,
+                       test_df$tetrend_sqr)
 
 fc2_14 <- forecast(md2_14, xreg = na.omit(test_model_14))
 forecast::accuracy(fc1_14, test)
@@ -527,11 +527,11 @@ summary(md2_15)
 checkresiduals(md2_15)
 fc1_15 <- forecast(md1_15, newdata = test_df)
 
-test_model_15 <- cbind(train_df$trend,
-                       train_df$seasonal,
-                       train_df$lag72,
-                       train_df$trend_sqr,
-                       train_df$hetrend)
+test_model_15 <- cbind(test_df$trend,
+                       test_df$seasonal,
+                       test_df$lag72,
+                       test_df$trend_sqr,
+                       test_df$hetrend)
 
 fc2_15 <- forecast(md2_15, xreg = na.omit(test_model_15))
 forecast::accuracy(fc1_15, test)
@@ -558,12 +558,12 @@ summary(md2_16)
 checkresiduals(md2_16)
 fc1_16 <- forecast(md1_16, newdata = test_df)
 
-test_model_16 <- cbind(train_df$trend,
-                       train_df$seasonal,
-                       train_df$lag72,
-                       train_df$trend_sqr,
-                       train_df$hetrend,
-                       train_df$heseasonal)
+test_model_16 <- cbind(test_df$trend,
+                       test_df$seasonal,
+                       test_df$lag72,
+                       test_df$trend_sqr,
+                       test_df$hetrend,
+                       test_df$heseasonal)
 
 fc2_16 <- forecast(md2_16, xreg = na.omit(test_model_16))
 forecast::accuracy(fc1_16, test)
@@ -591,13 +591,13 @@ summary(md2_17)
 checkresiduals(md2_17)
 fc1_17 <- forecast(md1_17, newdata = test_df)
 
-test_model_17 <- cbind(train_df$trend,
-                       train_df$seasonal,
-                       train_df$lag72,
-                       train_df$trend_sqr,
-                       train_df$hetrend,
-                       train_df$heseasonal,
-                       train_df$hetrend_sqr)
+test_model_17 <- cbind(test_df$trend,
+                       test_df$seasonal,
+                       test_df$lag72,
+                       test_df$trend_sqr,
+                       test_df$hetrend,
+                       test_df$heseasonal,
+                       test_df$hetrend_sqr)
 
 fc2_17 <- forecast(md2_17, xreg = na.omit(test_model_17))
 forecast::accuracy(fc1_17, test)
@@ -634,19 +634,19 @@ summary(md2_18)
 checkresiduals(md2_18)
 fc1_18 <- forecast(md1_18, newdata = test_df)
 
-test_model_18 <- cbind(train_df$trend,
-                       train_df$seasonal,
-                       train_df$lag72,
-                       train_df$trend_sqr,
-                       train_df$hitrend,
-                       train_df$hiseasonal,
-                       train_df$hitrend_sqr,
-                       train_df$tetrend,
-                       train_df$teseasonal,
-                       train_df$tetrend_sqr,
-                       train_df$hetrend,
-                       train_df$heseasonal,
-                       train_df$hetrend_sqr)
+test_model_18 <- cbind(test_df$trend,
+                       test_df$seasonal,
+                       test_df$lag72,
+                       test_df$trend_sqr,
+                       test_df$hitrend,
+                       test_df$hiseasonal,
+                       test_df$hitrend_sqr,
+                       test_df$tetrend,
+                       test_df$teseasonal,
+                       test_df$tetrend_sqr,
+                       test_df$hetrend,
+                       test_df$heseasonal,
+                       test_df$hetrend_sqr)
 
 fc2_18 <- forecast(md2_18, xreg = na.omit(test_model_18))
 forecast::accuracy(fc1_18, test)
@@ -712,7 +712,7 @@ temint_dfMLGB <- tibble(date = dato_interior$Fecha,
                         segundos = 60 * 10 * (as.numeric(rownames(dato_interior))-1),
                         day = 1 + (segundos - (segundos %% (3600 *12)))/(3600 *12),
                         y = temperatura_interior_detrend)
-temint_dfMLGB$lag72 <- stats::lag(temint_dfMLGB$y, n = 72)
+temint_dfMLGB$lag72 <- dplyr::lag(as.numeric(temint_dfMLGB$y), n = 72)
 
 temint_dfMLGB$trend <- decompose(temperatura_interior_detrend)$trend
 temint_dfMLGB$seasonal <- decompose(temperatura_interior_detrend)$seasonal
@@ -847,23 +847,23 @@ temint_df_MMLGB <- tibble(date = dato_interior$Fecha,
                           v = humedad_exterior_ts)
 head(temint_df_MMLGB)
 
-temint_df_MMLGB$lag72 <- stats::lag(temint_df_MMLGB$y, n = 72)
+temint_df_MMLGB$lag72 <- dplyr::lag(as.numeric(temint_df_MMLGB$y), n = 72)
 
 temint_df_MMLGB$trend <- decompose(temperatura_interior_ts)$trend
 temint_df_MMLGB$seasonal <- decompose(temperatura_interior_ts)$seasonal
-temint_df_MMLGB$trend_sqr <- temint_df$trend ^ 2
+temint_df_MMLGB$trend_sqr <- (decompose(temperatura_interior_ts)$trend^2)
 
 temint_df_MMLGB$tetrend <- decompose(temperatura_exterior_ts)$trend
 temint_df_MMLGB$teseasonal <- decompose(temperatura_exterior_ts)$seasonal
-temint_df_MMLGB$tetrend_sqr <- temint_df$tetrend ^ 2
+temint_df_MMLGB$tetrend_sqr <- (decompose(temperatura_exterior_ts)$trend ^ 2)
 
 temint_df_MMLGB$hitrend <- decompose(humedad_interior_ts)$trend
 temint_df_MMLGB$hiseasonal <- decompose(humedad_interior_ts)$seasonal
-temint_df_MMLGB$hitrend_sqr <- temint_df$hitrend ^ 2
+temint_df_MMLGB$hitrend_sqr <- (decompose(humedad_interior_ts)$trend ^ 2)
 
 temint_df_MMLGB$hetrend <- decompose(humedad_exterior_ts)$trend
 temint_df_MMLGB$heseasonal <- decompose(humedad_exterior_ts)$seasonal
-temint_df_MMLGB$hetrend_sqr <- temint_df$hetrend ^ 2
+temint_df_MMLGB$hetrend_sqr <- (decompose(humedad_exterior_ts)$trend ^ 2)
 
 h <- 627
 
@@ -1403,7 +1403,7 @@ temint_dfMLAuto <- tibble(date = dato_interior$Fecha,
                         segundos = 60 * 10 * (as.numeric(rownames(dato_interior))-1),
                         day = 1 + (segundos - (segundos %% (3600 *12)))/(3600 *12),
                         y = temperatura_interior_ts)
-temint_dfMLAuto$lag72 <- stats::lag(temint_dfMLAuto$y, n = 72)
+temint_dfMLAuto$lag72 <- dplyr::lag(as.numeric(temint_dfMLAuto$y), n = 72)
 
 temint_dfMLAuto$trend <- decompose(temperatura_interior_ts)$trend
 temint_dfMLAuto$seasonal <- decompose(temperatura_interior_ts)$seasonal
@@ -1514,23 +1514,23 @@ temint_df_MMLAuto <- tibble(date = dato_interior$Fecha,
                             v = humedad_exterior_ts)
 head(temint_df_MMLAuto)
 
-temint_df_MMLAuto$lag72 <- lag(temint_df$y, n = 72)
+temint_df_MMLAuto$lag72 <- dplyr::lag(as.numeric(temint_df_MMLAuto$y), n = 72)
 
 temint_df_MMLAuto$trend <- decompose(temperatura_interior_ts)$trend
 temint_df_MMLAuto$seasonal <- decompose(temperatura_interior_ts)$seasonal
-temint_df_MMLAuto$trend_sqr <- temint_df$trend ^ 2
+temint_df_MMLAuto$trend_sqr <- (decompose(temperatura_interior_ts)$trend^ 2)
 
 temint_df_MMLAuto$tetrend <- decompose(temperatura_exterior_ts)$trend
 temint_df_MMLAuto$teseasonal <- decompose(temperatura_exterior_ts)$seasonal
-temint_df_MMLAuto$tetrend_sqr <- temint_df$tetrend ^ 2
+temint_df_MMLAuto$tetrend_sqr <- (decompose(temperatura_exterior_ts)$trend^ 2)
 
 temint_df_MMLAuto$hitrend <- decompose(humedad_interior_ts)$trend
 temint_df_MMLAuto$hiseasonal <- decompose(humedad_interior_ts)$seasonal
-temint_df_MMLAuto$hitrend_sqr <- temint_df$hitrend ^ 2
+temint_df_MMLAuto$hitrend_sqr <- (decompose(humedad_interior_ts)$trend^ 2)
 
 temint_df_MMLAuto$hetrend <- decompose(humedad_exterior_ts)$trend
 temint_df_MMLAuto$heseasonal <- decompose(humedad_exterior_ts)$seasonal
-temint_df_MMLAuto$hetrend_sqr <- temint_df$hetrend ^ 2
+temint_df_MMLAuto$hetrend_sqr <- (decompose(humedad_exterior_ts)$trend^ 2)
 
 h <- 627
 
