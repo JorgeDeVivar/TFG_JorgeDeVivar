@@ -1,4 +1,5 @@
 # Se declaran las librerias
+
 library(TSstudio)
 library(plotly)
 library(dplyr)
@@ -112,7 +113,23 @@ ts_info(temperatura_interior_ts)
 ################################################################################
 
 ############################# Regresion lineal #################################
-#### UNIVARIABLE
+h=627
+teminterior_split <- ts_split(temperatura_interior_ts, sample.out = h)
+teminterior.train.ts <- teminterior_split$train
+teminterior.test.ts <- teminterior_split$test
+
+huminterior_split <- ts_split(humedad_interior_ts, sample.out = h)
+huminterior.train.ts <- huminterior_split$train
+huminterior.test.ts <- huminterior_split$test
+
+temexterior_split <- ts_split(temperatura_exterior_ts, sample.out = h)
+temexterior.train.ts <- teminterior_split$train
+temexterior.test.ts <- teminterior_split$test
+
+humexterior_split <- ts_split(humedad_exterior_ts, sample.out = h)
+humexterior.train.ts <- humexterior_split$train
+humexterior.test.ts <- humexterior_split$test
+
 df <- tibble(ds = dato_interior$Fecha,weekday = weekdays(dato_interior$Fecha),
                      segundos = 60 * 10 * (as.numeric(rownames(dato_interior))-1),
                      dia_muestreo = 1 + (segundos - (segundos %% (3600 *12)))/(3600 *12),
@@ -120,29 +137,44 @@ df <- tibble(ds = dato_interior$Fecha,weekday = weekdays(dato_interior$Fecha),
                      y = temperatura_interior_ts)
 head(tempint_df)
 
-df$trend <- decompose(temperatura_interior_ts)$trend
-df$seasonal <- decompose(temperatura_interior_ts)$seasonal
-df$lag72 <- dplyr::lag(as.numeric(df$y), n = 72)
-df$trend_sqr <- (decompose(temperatura_interior_ts)$trend)^2
+#df$trend <- decompose(temperatura_interior_ts)$trend
+#df$seasonal <- decompose(temperatura_interior_ts)$seasonal
+#df$lag72 <- dplyr::lag(as.numeric(df$y), n = 72)
+#df$trend_sqr <- (decompose(temperatura_interior_ts)$trend)^2
 
-df$tetrend <- decompose(temperatura_exterior_ts)$trend
-df$teseasonal <- decompose(temperatura_exterior_ts)$seasonal
-df$tetrend_sqr <- (decompose(temperatura_exterior_ts)$trend^2)
+#df$tetrend <- decompose(temperatura_exterior_ts)$trend
+#df$teseasonal <- decompose(temperatura_exterior_ts)$seasonal
+#df$tetrend_sqr <- (decompose(temperatura_exterior_ts)$trend^2)
 
-df$hitrend <- decompose(humedad_interior_ts)$trend
-df$hiseasonal <- decompose(humedad_interior_ts)$seasonal
-df$hitrend_sqr <- (decompose(humedad_interior_ts)$trend^2)
+#df$hitrend <- decompose(humedad_interior_ts)$trend
+#df$hiseasonal <- decompose(humedad_interior_ts)$seasonal
+#df$hitrend_sqr <- (decompose(humedad_interior_ts)$trend^2)
 
-df$hetrend <- decompose(humedad_exterior_ts)$trend
-df$heseasonal <- decompose(humedad_exterior_ts)$seasonal
-df$hetrend_sqr <- (decompose(humedad_exterior_ts)$trend^2)
-h <- 627
+#df$hetrend <- decompose(humedad_exterior_ts)$trend
+#df$heseasonal <- decompose(humedad_exterior_ts)$seasonal
+#df$hetrend_sqr <- (decompose(humedad_exterior_ts)$trend^2)
 
-par <- ts_split(ts.obj = temperatura_interior_ts, sample.out = h)
-train <- par$train
-test <- par$test
 train_df <- df[1:(nrow(df) - h), ]
 test_df <- df[(nrow(df) - h + 1):nrow(df), ]
+
+train_df$trend <- decompose(teminterior.train.ts)$trend
+train_df$seasonal <- decompose(teminterior.train.ts)$seasonal
+train_df$trend_sqr <- (decompose(teminterior.train.ts)$trend)^2
+train_df$lag72 <- dplyr::lag(as.numeric(teminterior.test.ts), n = 72)
+
+train_df$hitrend <- decompose(huminterior.train.ts)$trend
+train_df$hiseasonal <- decompose(huminterior.train.ts)$seasonal
+train_df$hitrend_sqr <- (decompose(huminterior.train.ts)$trend)^2
+
+train_df$tetrend <- decompose(temexterior.train.ts)$trend
+train_df$teseasonal <- decompose(temexterior.train.ts)$seasonal
+train_df$tetrend_sqr <- (decompose(temexterior.train.ts)$trend)^2
+
+train_df$hetrend <- decompose(humexterior.train.ts)$trend
+train_df$heseasonal <- decompose(humexterior.train.ts)$seasonal
+train_df$hetrend_sqr <- (decompose(humexterior.train.ts)$trend)^2
+
+#### UNIVARIABLE
 ######## TEMPERATURA INTERIOR
 # TENDENCIA
 md1_1 <- tslm(train ~ trend, data = train_df)
@@ -658,7 +690,6 @@ plot(fc2_18)
 # Serie temporal de la temperatura interior
 ti_split <- ts_split(temperatura_interior_ts, sample.out = 627)
 
-
 ti_train <- ti_split$train
 ti_test <- ti_split$test
 
@@ -711,27 +742,52 @@ plot(ti_test_auto2_log)
 temint_dfMLGB <- tibble(date = dato_interior$Fecha,
                         segundos = 60 * 10 * (as.numeric(rownames(dato_interior))-1),
                         day = 1 + (segundos - (segundos %% (3600 *12)))/(3600 *12),
-                        y = temperatura_interior_detrend)
-temint_dfMLGB$lag72 <- dplyr::lag(as.numeric(temint_dfMLGB$y), n = 72)
+                        y = temperatura_interior_ts)
+#temint_dfMLGB$lag72 <- dplyr::lag(as.numeric(temint_dfMLGB$y), n = 72)
 
-temint_dfMLGB$trend <- decompose(temperatura_interior_detrend)$trend
-temint_dfMLGB$seasonal <- decompose(temperatura_interior_detrend)$seasonal
-h <- 627
+#temint_dfMLGB$trend <- decompose(temperatura_interior_detrend)$trend
+#temint_dfMLGB$seasonal <- decompose(temperatura_interior_detrend)$seasonal
 
-### TENDENCIA
-temint_train_MLGB_trend <- temint_dfMLGB[1:(unidades - h), ]
-temint_test_MLGB_trend <- temint_dfMLGB[(unidades - h + 1):unidades, ]
+h = 627
+
+teminterior_split <- ts_split(temperatura_interior_ts, sample.out = h)
+teminterior.train.ts <- teminterior_split$train
+teminterior.test.ts <- teminterior_split$test
+
+temint_train_MLGB<- temint_dfMLGB[1:(unidades - h), ]
+temint_test_MLGB<- temint_dfMLGB[(unidades - h + 1):unidades, ]
+
+temint_train_MLGB$trend <- decompose(teminterior.train.ts)$trend
+temint_train_MLGB$seasonal <- decompose(teminterior.train.ts)$seasonal
+temint_train_MLGB$trend_sqr <- (decompose(teminterior.train.ts)$trend)^2
+temint_train_MLGB$lag72 <- dplyr::lag(as.numeric(teminterior.train.ts), n = 72)
+
+temint_test_MLGB$trend <- decompose(teminterior.test.ts)$trend
+temint_test_MLGB$seasonal <- decompose(teminterior.test.ts)$seasonal
+temint_test_MLGB$trend_sqr <- (decompose(teminterior.test.ts)$trend)^2
+temint_test_MLGB$lag72 <- dplyr::lag(as.numeric(teminterior.test.ts), n = 72)
+
+temint_train_MLGB$trend <- as.vector(temint_train_MLGB$trend)
+temint_train_MLGB$seasonal <- as.vector(temint_train_MLGB$seasonal)
+temint_train_MLGB$trend_sqr <- as.vector(temint_train_MLGB$trend_sqr)
+temint_train_MLGB$lag72 <- as.vector(temint_train_MLGB$lag72)
+temint_test_MLGB$trend <- as.vector(temint_test_MLGB$trend)
+temint_test_MLGB$seasonal <- as.vector(temint_test_MLGB$seasonal)
+temint_test_MLGB$trend_sqr <- as.vector(temint_test_MLGB$trend_sqr)
+temint_test_MLGB$lag72 <- as.vector(temint_test_MLGB$lag72)
 
 h2o.init(max_mem_size = "16G")
 
-train_h_MLGB_trend <- as.h2o(temint_train_MLGB_trend)
-test_h_MLGB_trend <- as.h2o(temint_test_MLGB_trend)
+train_h_MLGB <- as.h2o(temint_train_MLGB)
+test_h_MLGB <- as.h2o(temint_test_MLGB)
+
+### TENDENCIA
 
 x <- c("trend")
 y <- "y"
 
 gbm_md1 <- h2o.gbm(
-  training_frame = train_h_MLGB_trend,
+  training_frame = train_h_MLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -741,8 +797,8 @@ gbm_md1 <- h2o.gbm(
   learn_rate = 0.1,
   score_each_iteration = TRUE
 )
-test_h_MLGB_trend$pred_gbm <- h2o.predict(gbm_md1, test_h_MLGB_trend)
-test_1 <- as.data.frame(test_h_MLGB_trend)
+test_h_MLGB$pred_gbm <- h2o.predict(gbm_md1, test_h_MLGB)
+test_1 <- as.data.frame(test_h_MLGB)
 
 plot_ly(data = test_1) %>%
   add_lines(x = ~ date, y = ~ y, name = "Actual") %>%
@@ -758,19 +814,11 @@ sum((test_1$y - test_1$pred_gbm) , na.rm = TRUE) / nrow(test_1)
 sum(abs((test_1$y - test_1$pred_gbm)/ nrow(test_1)) , na.rm = TRUE)  #MAPE
 
 ### ESTACIONALIDAD
-temint_train_MLGB_seasonal <- temint_dfMLGB[1:(unidades - h), ]
-temint_test_MLGB_seasonal <- temint_dfMLGB[(unidades - h + 1):unidades, ]
-
-h2o.init(max_mem_size = "16G")
-
-train_h_MLGB_seasonal <- as.h2o(temint_train_MLGB_seasonal)
-test_h_MLGB_seasonal <- as.h2o(temint_test_MLGB_seasonal)
-
 x <- c("seasonal")
 y <- "y"
 
 gbm_md2 <- h2o.gbm(
-  training_frame = train_h_MLGB_seasonal,
+  training_frame = train_h_MLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -780,8 +828,8 @@ gbm_md2 <- h2o.gbm(
   learn_rate = 0.1,
   score_each_iteration = TRUE
 )
-test_h_MLGB_seasonal$pred_gbm <- h2o.predict(gbm_md2, test_h_MLGB_seasonal)
-test_2 <- as.data.frame(test_h_MLGB_seasonal)
+test_h_MLGB_seasonal$pred_gbm <- h2o.predict(gbm_md2, test_h_MLGB)
+test_2 <- as.data.frame(test_h_MLGB)
 
 plot_ly(data = test_2) %>%
   add_lines(x = ~ date, y = ~ y, name = "Actual") %>%
@@ -797,19 +845,11 @@ sum((test_2$y - test_2$pred_gbm) , na.rm = TRUE) / nrow(test_2)
 sum(abs((test_2$y - test_2$pred_gbm)/ nrow(test_2)) , na.rm = TRUE)  #MAPE
 
 ### LAG 72
-temint_train_MLGB_lag <- temint_dfMLGB[1:(unidades - h), ]
-temint_test_MLGB_lag <- temint_dfMLGB[(unidades - h + 1):unidades, ]
-
-h2o.init(max_mem_size = "16G")
-
-train_h_MLGB_lag <- as.h2o(temint_train_MLGB_lag)
-test_h_MLGB_lag <- as.h2o(temint_test_MLGB_lag)
-
 x <- c("lag72")
 y <- "y"
 
 gbm_md3 <- h2o.gbm(
-  training_frame = train_h_MLGB_lag,
+  training_frame = train_h_MLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -836,6 +876,22 @@ sum((test_3$y - test_3$pred_gbm) , na.rm = TRUE) / nrow(test_3)
 sum(abs((test_3$y - test_3$pred_gbm)/ nrow(test_3)) , na.rm = TRUE)  #MAPE
 
 ########################## MULTIVARIABLE
+teminterior_split <- ts_split(temperatura_interior_ts, sample.out = h)
+teminterior.train.ts <- teminterior_split$train
+teminterior.test.ts <- teminterior_split$test
+
+huminterior_split <- ts_split(humedad_interior_ts, sample.out = h)
+huminterior.train.ts <- huminterior_split$train
+huminterior.test.ts <- huminterior_split$test
+
+temexterior_split <- ts_split(temperatura_exterior_ts, sample.out = h)
+temexterior.train.ts <- teminterior_split$train
+temexterior.test.ts <- teminterior_split$test
+
+humexterior_split <- ts_split(humedad_exterior_ts, sample.out = h)
+humexterior.train.ts <- humexterior_split$train
+humexterior.test.ts <- humexterior_split$test
+
 temint_df_MMLGB <- tibble(date = dato_interior$Fecha,
                           segundos = 60 * 10 * (as.numeric(rownames(dato_interior))-1),
                           semana_muestreo = 1 + (segundos - (segundos %% (3600 *24*7)))/(3600 *24*7),
@@ -847,37 +903,106 @@ temint_df_MMLGB <- tibble(date = dato_interior$Fecha,
                           v = humedad_exterior_ts)
 head(temint_df_MMLGB)
 
-temint_df_MMLGB$lag72 <- dplyr::lag(as.numeric(temint_df_MMLGB$y), n = 72)
-
-temint_df_MMLGB$trend <- decompose(temperatura_interior_ts)$trend
-temint_df_MMLGB$seasonal <- decompose(temperatura_interior_ts)$seasonal
-temint_df_MMLGB$trend_sqr <- (decompose(temperatura_interior_ts)$trend^2)
-
-temint_df_MMLGB$tetrend <- decompose(temperatura_exterior_ts)$trend
-temint_df_MMLGB$teseasonal <- decompose(temperatura_exterior_ts)$seasonal
-temint_df_MMLGB$tetrend_sqr <- (decompose(temperatura_exterior_ts)$trend ^ 2)
-
-temint_df_MMLGB$hitrend <- decompose(humedad_interior_ts)$trend
-temint_df_MMLGB$hiseasonal <- decompose(humedad_interior_ts)$seasonal
-temint_df_MMLGB$hitrend_sqr <- (decompose(humedad_interior_ts)$trend ^ 2)
-
-temint_df_MMLGB$hetrend <- decompose(humedad_exterior_ts)$trend
-temint_df_MMLGB$heseasonal <- decompose(humedad_exterior_ts)$seasonal
-temint_df_MMLGB$hetrend_sqr <- (decompose(humedad_exterior_ts)$trend ^ 2)
+# temint_df_MMLGB$lag72 <- dplyr::lag(as.numeric(temint_df_MMLGB$y), n = 72)
+# 
+# temint_df_MMLGB$trend <- decompose(temperatura_interior_ts)$trend
+# temint_df_MMLGB$seasonal <- decompose(temperatura_interior_ts)$seasonal
+# temint_df_MMLGB$trend_sqr <- (decompose(temperatura_interior_ts)$trend^2)
+# 
+# temint_df_MMLGB$tetrend <- decompose(temperatura_exterior_ts)$trend
+# temint_df_MMLGB$teseasonal <- decompose(temperatura_exterior_ts)$seasonal
+# temint_df_MMLGB$tetrend_sqr <- (decompose(temperatura_exterior_ts)$trend ^ 2)
+# 
+# temint_df_MMLGB$hitrend <- decompose(humedad_interior_ts)$trend
+# temint_df_MMLGB$hiseasonal <- decompose(humedad_interior_ts)$seasonal
+# temint_df_MMLGB$hitrend_sqr <- (decompose(humedad_interior_ts)$trend ^ 2)
+# 
+# temint_df_MMLGB$hetrend <- decompose(humedad_exterior_ts)$trend
+# temint_df_MMLGB$heseasonal <- decompose(humedad_exterior_ts)$seasonal
+# temint_df_MMLGB$hetrend_sqr <- (decompose(humedad_exterior_ts)$trend ^ 2)
 
 h <- 627
 
+
+teminterior_split <- ts_split(temperatura_interior_ts, sample.out = h)
+teminterior.train.ts <- teminterior_split$train
+teminterior.test.ts <- teminterior_split$test
+
+temint_train_MMLGB<- temint_df_MMLGB[1:(unidades - h), ]
+temint_test_MMLGB<- temint_df_MMLGB[(unidades - h + 1):unidades, ]
+
+temint_train_MMLGB$trend <- decompose(teminterior.train.ts)$trend
+temint_train_MMLGB$seasonal <- decompose(teminterior.train.ts)$seasonal
+temint_train_MMLGB$trend_sqr <- (decompose(teminterior.train.ts)$trend)^2
+temint_train_MMLGB$lag72 <- dplyr::lag(as.numeric(teminterior.train.ts), n = 72)
+
+temint_train_MMLGB$hitrend <- decompose(huminterior.train.ts)$trend
+temint_train_MMLGB$hiseasonal <- decompose(huminterior.train.ts)$seasonal
+temint_train_MMLGB$hitrend_sqr <- (decompose(huminterior.train.ts)$trend)^2
+
+temint_train_MMLGB$tetrend <- decompose(temexterior.train.ts)$trend
+temint_train_MMLGB$teseasonal <- decompose(temexterior.train.ts)$seasonal
+temint_train_MMLGB$tetrend_sqr <- (decompose(temexterior.train.ts)$trend)^2
+
+temint_train_MMLGB$hetrend <- decompose(humexterior.train.ts)$trend
+temint_train_MMLGB$heseasonal <- decompose(humexterior.train.ts)$seasonal
+temint_train_MMLGB$hetrend_sqr <- (decompose(humexterior.train.ts)$trend)^2
+
+temint_test_MMLGB$trend <- decompose(teminterior.test.ts)$trend
+temint_test_MMLGB$seasonal <- decompose(teminterior.test.ts)$seasonal
+temint_test_MMLGB$trend_sqr <- (decompose(teminterior.test.ts)$trend)^2
+temint_test_MMLGB$lag72 <- dplyr::lag(as.numeric(teminterior.test.ts), n = 72)
+
+temint_test_MMLGB$hitrend <- decompose(huminterior.test.ts)$trend
+temint_test_MMLGB$hiseasonal <- decompose(huminterior.test.ts)$seasonal
+temint_test_MMLGB$hitrend_sqr <- (decompose(huminterior.test.ts)$trend)^2
+
+temint_test_MMLGB$tetrend <- decompose(temexterior.test.ts)$trend
+temint_test_MMLGB$teseasonal <- decompose(temexterior.test.ts)$seasonal
+temint_test_MMLGB$tetrend_sqr <- (decompose(temexterior.test.ts)$trend)^2
+
+temint_test_MMLGB$hetrend <- decompose(humexterior.test.ts)$trend
+temint_test_MMLGB$heseasonal <- decompose(humexterior.test.ts)$seasonal
+temint_test_MMLGB$hetrend_sqr <- (decompose(humexterior.test.ts)$trend)^2
+
+temint_train_MMLGB$trend <- as.vector(temint_train_MMLGB$trend)
+temint_train_MMLGB$seasonal <- as.vector(temint_train_MMLGB$seasonal)
+temint_train_MMLGB$trend_sqr <- as.vector(temint_train_MMLGB$trend_sqr)
+temint_train_MMLGB$lag72 <- as.vector(temint_train_MMLGB$lag72)
+temint_train_MMLGB$hitrend <- as.vector(temint_train_MMLGB$hitrend)
+temint_train_MMLGB$hiseasonal <- as.vector(temint_train_MMLGB$hiseasonal)
+temint_train_MMLGB$hitrend_sqr <- as.vector(temint_train_MMLGB$hitrend_sqr)
+temint_train_MMLGB$tetrend <- as.vector(temint_train_MMLGB$tetrend)
+temint_train_MMLGB$teseasonal <- as.vector(temint_train_MMLGB$teseasonal)
+temint_train_MMLGB$tetrend_sqr <- as.vector(temint_train_MMLGB$tetrend_sqr)
+temint_train_MMLGB$hetrend <- as.vector(temint_train_MMLGB$hetrend)
+temint_train_MMLGB$heseasonal <- as.vector(temint_train_MMLGB$heseasonal)
+temint_train_MMLGB$hetrend_sqr <- as.vector(temint_train_MMLGB$hetrend_sqr)
+temint_test_MMLGB$trend <- as.vector(temint_test_MMLGB$trend)
+temint_test_MMLGB$seasonal <- as.vector(temint_test_MMLGB$seasonal)
+temint_test_MMLGB$trend_sqr <- as.vector(temint_test_MMLGB$trend_sqr)
+temint_test_MMLGB$lag72 <- as.vector(temint_test_MMLGB$lag72)
+temint_test_MMLGB$hitrend <- as.vector(temint_test_MMLGB$hitrend)
+temint_test_MMLGB$hiseasonal <- as.vector(temint_test_MMLGB$hiseasonal)
+temint_test_MMLGB$hitrend_sqr <- as.vector(temint_test_MMLGB$hitrend_sqr)
+temint_test_MMLGB$tetrend <- as.vector(temint_test_MMLGB$tetrend)
+temint_test_MMLGB$teseasonal <- as.vector(temint_test_MMLGB$teseasonal)
+temint_test_MMLGB$tetrend_sqr <- as.vector(temint_test_MMLGB$tetrend_sqr)
+temint_test_MMLGB$hetrend <- as.vector(temint_test_MMLGB$hetrend)
+temint_test_MMLGB$heseasonal <- as.vector(temint_test_MMLGB$heseasonal)
+temint_test_MMLGB$hetrend_sqr <- as.vector(temint_test_MMLGB$hetrend_sqr)
+
+h2o.init(max_mem_size = "16G")
+
+train_h_MMLGB <- as.h2o(temint_train_MMLGB)
+test_h_MMLGB <- as.h2o(temint_test_MMLGB)
+
 ############ TEMPERATURA INTERIOR
 #### TENDENCIA Y ESTACIONALIDAD
-temint_train_MMLGB_TItrendseas <- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendseas <- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendseas <- as.h2o(temint_train_MMLGB_TItrendseas)
-test_h_MMLGB_TItrendseas <- as.h2o(temint_test_MMLGB_TItrendseas)
 x <- c("trend", "seasonal")
 y <- "y"
 gbm_md11 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendseas,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -889,8 +1014,8 @@ gbm_md11 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md11)
-test_h_MMLGB_TItrendseas$pred_gbm <- h2o.predict(gbm_md11, test_h_MMLGB_TItrendseas)
-test_11 <- as.data.frame(test_h_MMLGB_TItrendseas)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md11, test_h_MMLGB)
+test_11 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_11) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -905,15 +1030,10 @@ sum((test_11$y - test_11$pred_gbm) , na.rm = TRUE) / nrow(test_11)
 sum(abs((test_11$y - test_11$pred_gbm)/ nrow(test_11)) , na.rm = TRUE)  #MAPE
 
 #### TENDENCIA Y LAG72
-temint_train_MMLGB_TItrendlag <- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendlag <- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendlag <- as.h2o(temint_train_MMLGB_TItrendlag)
-test_h_MMLGB_TItrendlag <- as.h2o(temint_test_MMLGB_TItrendlag)
 x <- c("trend", "lag72")
 y <- "y"
 gbm_md12 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendlag,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -925,8 +1045,8 @@ gbm_md12 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md12)
-test_h_MMLGB_TItrendlag$pred_gbm <- h2o.predict(gbm_md12, test_h_MMLGB_TItrendlag)
-test_12 <- as.data.frame(test_h_MMLGB_TItrendlag)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md12, test_h_MMLGB)
+test_12 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_12) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -941,15 +1061,10 @@ sum((test_12$y - test_12$pred_gbm) , na.rm = TRUE) / nrow(test_12)
 sum(abs((test_12$y - test_12$pred_gbm)/ nrow(test_12)) , na.rm = TRUE)  #MAPE
 
 #### TENDENCIA, ESTACIONALIDAD Y LAG72
-temint_train_MMLGB_TItrendseaslag <- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendseaslag <- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendseaslag <- as.h2o(temint_train_MMLGB_TItrendseaslag)
-test_h_MMLGB_TItrendseaslag <- as.h2o(temint_test_MMLGB_TItrendseaslag)
 x <- c("trend", "seasonal","lag72")
 y <- "y"
 gbm_md13 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendseaslag,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -961,8 +1076,8 @@ gbm_md13 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md13)
-test_h_MMLGB_TItrendseaslag$pred_gbm <- h2o.predict(gbm_md13, test_h_MMLGB_TItrendseaslag)
-test_13 <- as.data.frame(test_h_MMLGB_TItrendseaslag)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md13, test_h_MMLGB)
+test_13 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_13) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -977,16 +1092,10 @@ sum((test_13$y - test_13$pred_gbm) , na.rm = TRUE) / nrow(test_13)
 sum(abs((test_13$y - test_13$pred_gbm)/ nrow(test_13)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO
-
-temint_train_MMLGB_TItrendseaslagsqr <- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendseaslagsqr <- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendseaslagsqr <- as.h2o(temint_train_MMLGB_TItrendseaslagsqr)
-test_h_MMLGB_TItrendseaslagsqr <- as.h2o(temint_test_MMLGB_TItrendseaslagsqr)
 x <- c("trend", "seasonal","lag72", "trend_sqr")
 y <- "y"
 gbm_md14 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendseaslagsqr,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -998,8 +1107,8 @@ gbm_md14 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md14)
-test_h_MMLGB_TItrendseaslagsqr$pred_gbm <- h2o.predict(gbm_md14, test_h_MMLGB_TItrendseaslagsqr)
-test_14 <- as.data.frame(test_h_MMLGB_TItrendseaslagsqr)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md14, test_h_MMLGB)
+test_14 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_14) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1015,16 +1124,10 @@ sum(abs((test_14$y - test_14$pred_gbm)/ nrow(test_14)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # HI TENDENCIA
-
-temint_train_MMLGB_TItrendseaslagsqrHItrend <- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendseaslagsqrHItrend <- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendseaslagsqrHItrend <- as.h2o(temint_train_MMLGB_TItrendseaslagsqrHItrend)
-test_h_MMLGB_TItrendseaslagsqrHItrend <- as.h2o(temint_test_MMLGB_TItrendseaslagsqrHItrend)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "hitrend")
 y <- "y"
 gbm_md15 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendseaslagsqrHItrend,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -1036,8 +1139,8 @@ gbm_md15 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md15)
-test_h_MMLGB_TItrendseaslagsqrHItrend$pred_gbm <- h2o.predict(gbm_md15, test_h_MMLGB_TItrendseaslagsqrHItrend)
-test_15 <- as.data.frame(test_h_MMLGB_TItrendseaslagsqrHItrend)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md15, test_h_MMLGB)
+test_15 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_15) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1053,16 +1156,10 @@ sum(abs((test_15$y - test_15$pred_gbm)/ nrow(test_15)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # HI TENDENCIA, ESTACIONALIDAD
-
-temint_train_MMLGB_TItrendseaslagsqrHItrendseas <- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendseaslagsqrHItrendseas <- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendseaslagsqrHItrendseas <- as.h2o(temint_train_MMLGB_TItrendseaslagsqrHItrendseas)
-test_h_MMLGB_TItrendseaslagsqrHItrendseas <- as.h2o(temint_test_MMLGB_TItrendseaslagsqrHItrendseas)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "hitrend", "hiseasonal")
 y <- "y"
 gbm_md16 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendseaslagsqrHItrendseas,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -1074,8 +1171,8 @@ gbm_md16 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md16)
-test_h_MMLGB_TItrendseaslagsqrHItrendseas$pred_gbm <- h2o.predict(gbm_md16, test_h_MMLGB_TItrendseaslagsqrHItrendseas)
-test_16 <- as.data.frame(test_h_MMLGB_TItrendseaslagsqrHItrendseas)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md16, test_h_MMLGB)
+test_16 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_16) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1091,16 +1188,10 @@ sum(abs((test_16$y - test_16$pred_gbm)/ nrow(test_16)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # HI TENDENCIA, ESTACIONALIDAD Y TENDENCIA CUADRADO
-
-temint_train_MMLGB_TItrendseaslagsqrHItrendseassqr <- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendseaslagsqrHItrendseassqr <- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendseaslagsqrHItrendseassqr <- as.h2o(temint_train_MMLGB_TItrendseaslagsqrHItrendseassqr)
-test_h_MMLGB_TItrendseaslagsqrHItrendseassqr <- as.h2o(temint_test_MMLGB_TItrendseaslagsqrHItrendseassqr)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "hitrend", "hiseasonal", "hitrend_sqr")
 y <- "y"
 gbm_md17 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendseaslagsqrHItrendseassqr,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -1112,8 +1203,8 @@ gbm_md17 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md17)
-test_h_MMLGB_TItrendseaslagsqrHItrendseassqr$pred_gbm <- h2o.predict(gbm_md17, test_h_MMLGB_TItrendseaslagsqrHItrendseassqr)
-test_17 <- as.data.frame(test_h_MMLGB_TItrendseaslagsqrHItrendseassqr)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md17, test_h_MMLGB)
+test_17 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_17) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1129,16 +1220,10 @@ sum(abs((test_17$y - test_17$pred_gbm)/ nrow(test_17)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # TE TENDENCIA
-
-temint_train_MMLGB_TItrendseaslagsqrTEtrend <- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendseaslagsqrTEtrend <- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendseaslagsqrTEtrend <- as.h2o(temint_train_MMLGB_TItrendseaslagsqrTEtrend)
-test_h_MMLGB_TItrendseaslagsqrTEtrend <- as.h2o(temint_test_MMLGB_TItrendseaslagsqrTEtrend)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "tetrend")
 y <- "y"
 gbm_md18 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendseaslagsqrTEtrend,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -1150,8 +1235,8 @@ gbm_md18 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md18)
-test_h_MMLGB_TItrendseaslagsqrTEtrend$pred_gbm <- h2o.predict(gbm_md18, test_h_MMLGB_TItrendseaslagsqrTEtrend)
-test_18 <- as.data.frame(test_h_MMLGB_TItrendseaslagsqrTEtrend)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md18, test_h_MMLGB)
+test_18 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_18) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1167,16 +1252,10 @@ sum(abs((test_18$y - test_18$pred_gbm)/ nrow(test_18)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # TE TENDENCIA, ESTACIONALIDAD
-
-temint_train_MMLGB_TItrendseaslagsqrTEtrendseas<- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendseaslagsqrTEtrendseas<- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendseaslagsqrTEtrendseas<- as.h2o(temint_train_MMLGB_TItrendseaslagsqrTEtrendseas)
-test_h_MMLGB_TItrendseaslagsqrTEtrendseas<- as.h2o(temint_test_MMLGB_TItrendseaslagsqrTEtrendseas)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "tetrend", "teseasonal")
 y <- "y"
 gbm_md19 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendseaslagsqrTEtrendseas,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -1188,8 +1267,8 @@ gbm_md19 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md19)
-test_h_MMLGB_TItrendseaslagsqrTEtrendseas$pred_gbm <- h2o.predict(gbm_md19, test_h_MMLGB_TItrendseaslagsqrTEtrendseas)
-test_19 <- as.data.frame(test_h_MMLGB_TItrendseaslagsqrTEtrendseas)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md19, test_h_MMLGB)
+test_19 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_19) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1205,16 +1284,10 @@ sum(abs((test_19$y - test_19$pred_gbm)/ nrow(test_19)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # TE TENDENCIA, ESTACIONALIDAD Y TENDENCIA CUADRADO
-
-temint_train_MMLGB_TItrendseaslagsqrTEtrendseassqr<- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendseaslagsqrTEtrendseassqr<- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendseaslagsqrTEtrendseassqr<- as.h2o(temint_train_MMLGB_TItrendseaslagsqrTEtrendseassqr)
-test_h_MMLGB_TItrendseaslagsqrTEtrendseassqr<- as.h2o(temint_test_MMLGB_TItrendseaslagsqrTEtrendseassqr)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "tetrend", "teseasonal", "tetrend_sqr")
 y <- "y"
 gbm_md20 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendseaslagsqrTEtrendseassqr,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -1226,8 +1299,8 @@ gbm_md20 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md20)
-test_h_MMLGB_TItrendseaslagsqrTEtrendseassqr$pred_gbm <- h2o.predict(gbm_md20, test_h_MMLGB_TItrendseaslagsqrTEtrendseassqr)
-test_20 <- as.data.frame(test_h_MMLGB_TItrendseaslagsqrTEtrendseassqr)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md20, test_h_MMLGB)
+test_20 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_20) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1243,16 +1316,10 @@ sum(abs((test_20$y - test_20$pred_gbm)/ nrow(test_20)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # HE TENDENCIA
-
-temint_train_MMLGB_TItrendseaslagsqrHEtrend<- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendseaslagsqrHEtrend<- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendseaslagsqrHEtrend<- as.h2o(temint_train_MMLGB_TItrendseaslagsqrHEtrend)
-test_h_MMLGB_TItrendseaslagsqrHEtrend<- as.h2o(temint_test_MMLGB_TItrendseaslagsqrHEtrend)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "hetrend")
 y <- "y"
 gbm_md21 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendseaslagsqrHEtrend,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -1264,8 +1331,8 @@ gbm_md21 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md21)
-test_h_MMLGB_TItrendseaslagsqrHEtrend$pred_gbm <- h2o.predict(gbm_md21, test_h_MMLGB_TItrendseaslagsqrHEtrend)
-test_21 <- as.data.frame(test_h_MMLGB_TItrendseaslagsqrHEtrend)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md21, test_h_MMLGB)
+test_21 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_21) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1281,16 +1348,10 @@ sum(abs((test_21$y - test_21$pred_gbm)/ nrow(test_21)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # HE TENDENCIA, ESTACIONALIDAD
-
-temint_train_MMLGB_TItrendseaslagsqrHEtrendseas<- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendseaslagsqrHEtrendseas<- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendseaslagsqrHEtrendseas<- as.h2o(temint_train_MMLGB_TItrendseaslagsqrHEtrendseas)
-test_h_MMLGB_TItrendseaslagsqrHEtrendseas<- as.h2o(temint_test_MMLGB_TItrendseaslagsqrHEtrendseas)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "hetrend", "heseasonal")
 y <- "y"
 gbm_md22 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendseaslagsqrHEtrendseas,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -1302,8 +1363,8 @@ gbm_md22 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md22)
-test_h_MMLGB_TItrendseaslagsqrHEtrendseas$pred_gbm <- h2o.predict(gbm_md22, test_h_MMLGB_TItrendseaslagsqrHEtrendseas)
-test_22 <- as.data.frame(test_h_MMLGB_TItrendseaslagsqrHEtrendseas)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md22, test_h_MMLGB)
+test_22 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_22) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1319,16 +1380,10 @@ sum(abs((test_22$y - test_22$pred_gbm)/ nrow(test_22)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # HE TENDENCIA, ESTACIONALIDAD Y TENDENCIA CUADRADO
-
-temint_train_MMLGB_TItrendseaslagsqrHEtrendseassqr<- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TItrendseaslagsqrHEtrendseassqr<- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TItrendseaslagsqrHEtrendseassqr<- as.h2o(temint_train_MMLGB_TItrendseaslagsqrHEtrendseassqr)
-test_h_MMLGB_TItrendseaslagsqrHEtrendseassqr<- as.h2o(temint_test_MMLGB_TItrendseaslagsqrHEtrendseassqr)
-x <- c("trend", "seasonal","lag72", "trend_sqr", "hetrend", "heseasonal")
+x <- c("trend", "seasonal","lag72", "trend_sqr", "hetrend", "heseasonal", "hetrend_sqr")
 y <- "y"
 gbm_md23 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TItrendseaslagsqrHEtrendseassqr,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -1340,8 +1395,8 @@ gbm_md23 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md23)
-test_h_MMLGB_TItrendseaslagsqrHEtrendseassqr$pred_gbm <- h2o.predict(gbm_md23, test_h_MMLGB_TItrendseaslagsqrHEtrendseassqr)
-test_23 <- as.data.frame(test_h_MMLGB_TItrendseaslagsqrHEtrendseassqr)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md23, test_h_MMLGB)
+test_23 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_23) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1359,16 +1414,13 @@ sum(abs((test_23$y - test_23$pred_gbm)/ nrow(test_23)) , na.rm = TRUE)  #MAPE
 # HI TENDENCIA, ESTACIONALIDAD Y TENDENCIA CUADRADO
 # TE TENDENCIA, ESTACIONALIDAD Y TENDENCIA CUADRADO
 # HE TENDENCIA, ESTACIONALIDAD Y TENDENCIA CUADRADO
-
-temint_train_MMLGB_TITEHIHE<- temint_df_MMLGB[1:(unidades - h), ]
-temint_test_MMLGB_TITEHIHE<- temint_df_MMLGB[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLGB_TITEHIHE<- as.h2o(temint_train_MMLGB_TITEHIHE)
-test_h_MMLGB_TITEHIHE<- as.h2o(temint_test_MMLGB_TITEHIHE)
-x <- c("trend", "seasonal","lag72", "trend_sqr", "hetrend", "heseasonal")
+x <- c("trend", "seasonal","lag72", "trend_sqr", 
+       "hetrend", "heseasonal", "hetrend_sqr",
+       "tetrend", "teseasonal", "tetrend_sqr",
+       "hitrend", "hiseasonal", "hitrend_sqr")
 y <- "y"
 gbm_md24 <- h2o.gbm(
-  training_frame = train_h_MMLGB_TITEHIHE,
+  training_frame = train_h_MMLGB,
   nfolds = 5,
   x = x,
   y = y,
@@ -1380,8 +1432,8 @@ gbm_md24 <- h2o.gbm(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(gbm_md24)
-test_h_MMLGB_TITEHIHE$pred_gbm <- h2o.predict(gbm_md24, test_h_MMLGB_TITEHIHE)
-test_24 <- as.data.frame(test_h_MMLGB_TITEHIHE)
+test_h_MMLGB$pred_gbm <- h2o.predict(gbm_md24, test_h_MMLGB)
+test_24 <- as.data.frame(test_h_MMLGB)
 plot_ly(data = test_24) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1403,34 +1455,57 @@ temint_dfMLAuto <- tibble(date = dato_interior$Fecha,
                         segundos = 60 * 10 * (as.numeric(rownames(dato_interior))-1),
                         day = 1 + (segundos - (segundos %% (3600 *12)))/(3600 *12),
                         y = temperatura_interior_ts)
-temint_dfMLAuto$lag72 <- dplyr::lag(as.numeric(temint_dfMLAuto$y), n = 72)
+# temint_dfMLAuto$lag72 <- dplyr::lag(as.numeric(temint_dfMLAuto$y), n = 72)
+# 
+# temint_dfMLAuto$trend <- decompose(temperatura_interior_ts)$trend
+# temint_dfMLAuto$seasonal <- decompose(temperatura_interior_ts)$seasonal
 
-temint_dfMLAuto$trend <- decompose(temperatura_interior_ts)$trend
-temint_dfMLAuto$seasonal <- decompose(temperatura_interior_ts)$seasonal
 h <- 627
 
+teminterior_split <- ts_split(temperatura_interior_ts, sample.out = h)
+teminterior.train.ts <- teminterior_split$train
+teminterior.test.ts <- teminterior_split$test
 
-### TENDENCIA
-temint_train_MLAuto_trend <- temint_dfMLAuto[1:(unidades - h), ]
-temint_test_MLAuto_trend <- temint_dfMLAuto[(unidades - h + 1):unidades, ]
+temint_train_MLAuto<- temint_dfMLAuto[1:(unidades - h), ]
+temint_test_MLAuto<- temint_dfMLAuto[(unidades - h + 1):unidades, ]
+
+temint_train_MLAuto$trend <- decompose(teminterior.train.ts)$trend
+temint_train_MLAuto$seasonal <- decompose(teminterior.train.ts)$seasonal
+temint_train_MLAuto$trend_sqr <- (decompose(teminterior.train.ts)$trend)^2
+temint_train_MLAuto$lag72 <- dplyr::lag(as.numeric(teminterior.train.ts), n = 72)
+
+temint_test_MLAuto$trend <- decompose(teminterior.test.ts)$trend
+temint_test_MLAuto$seasonal <- decompose(teminterior.test.ts)$seasonal
+temint_test_MLAuto$trend_sqr <- (decompose(teminterior.test.ts)$trend)^2
+temint_test_MLAuto$lag72 <- dplyr::lag(as.numeric(teminterior.test.ts), n = 72)
+
+temint_train_MLAuto$trend <- as.vector(temint_train_MLAuto$trend)
+temint_train_MLAuto$seasonal <- as.vector(temint_train_MLAuto$seasonal)
+temint_train_MLAuto$trend_sqr <- as.vector(temint_train_MLAuto$trend_sqr)
+temint_train_MLAuto$lag72 <- as.vector(temint_train_MLAuto$lag72)
+temint_test_MLAuto$trend <- as.vector(temint_test_MLAuto$trend)
+temint_test_MLAuto$seasonal <- as.vector(temint_test_MLAuto$seasonal)
+temint_test_MLAuto$trend_sqr <- as.vector(temint_test_MLAuto$trend_sqr)
+temint_test_MLAuto$lag72 <- as.vector(temint_test_MLAuto$lag72)
 
 h2o.init(max_mem_size = "16G")
 
-train_h_MLAuto_trend <- as.h2o(temint_train_MLAuto_trend)
-test_h_MLAuto_trend <- as.h2o(temint_test_MLAuto_trend)
+train_h_MLAuto <- as.h2o(temint_train_MLAuto)
+test_h_MLAuto <- as.h2o(temint_test_MLAuto)
 
+### TENDENCIA
 x <- c("trend")
 y <- "y"
 
-autoML5 <- h2o.automl(training_frame = train_h_MLAuto_trend,
+autoML5 <- h2o.automl(training_frame = train_h_MLAuto,
                       x = x,
                       y = y,
                       nfolds = 5,
                       max_runtime_secs = 60*20,
                       seed = 1234)
 
-test_h_MLAuto_trend$pred_autoML <- h2o.predict(autoML5@leader, test_h_MLAuto_trend)
-test_5 <- as.data.frame(test_h_MLAuto_trend)
+test_h_MLAuto$pred_autoML <- h2o.predict(autoML5@leader, test_h_MLAuto)
+test_5 <- as.data.frame(test_h_MLAuto)
 plot_ly(data = test_5) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_autoML, name = "autoML") %>%
@@ -1444,22 +1519,17 @@ sum((test_5$y - test_5$pred_autoML) , na.rm = TRUE) / nrow(test_5)
 sum(abs((test_5$y - test_5$autoML)/ nrow(test_5)) , na.rm = TRUE)  #MAPE
 
 ### ESTACIONALIDAD
-temint_train_MLAuto_seas <- temint_dfMLAuto[1:(unidades - h), ]
-temint_test_MLAuto_seas <- temint_dfMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MLAuto_seas <- as.h2o(temint_train_MLAuto_seas)
-test_h_MLAuto_seas <- as.h2o(temint_test_MLAuto_seas)
 x <- c("seasonal")
 y <- "y"
-autoML6 <- h2o.automl(training_frame = train_h_MLAuto_seas,
+autoML6 <- h2o.automl(training_frame = train_h_MLAuto,
                       x = x,
                       y = y,
                       nfolds = 5,
                       max_runtime_secs = 60*20,
                       seed = 1234)
 
-test_h_MLAuto_seas$pred_autoML <- h2o.predict(autoML6@leader, test_h_MLAuto_seas)
-test_6 <- as.data.frame(test_h_MLAuto_seas)
+test_h_MLAuto$pred_autoML <- h2o.predict(autoML6@leader, test_h_MLAuto)
+test_6 <- as.data.frame(test_h_MLAuto)
 plot_ly(data = test_6) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_autoML, name = "autoML") %>%
@@ -1473,22 +1543,17 @@ sum((test_6$y - test_6$pred_autoML) , na.rm = TRUE) / nrow(test_6)
 sum(abs((test_6$y - test_6$autoML)/ nrow(test_6)) , na.rm = TRUE)  #MAPE
 
 ### LAG 72
-temint_train_MLAuto_lag <- temint_dfMLAuto[1:(unidades - h), ]
-temint_test_MLAuto_lag <- temint_dfMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MLAuto_lag <- as.h2o(temint_train_MLAuto_lag)
-test_h_MLAuto_lag <- as.h2o(temint_test_MLAuto_lag)
 x <- c("lag72")
 y <- "y"
-autoML7 <- h2o.automl(training_frame = train_h_MLAuto_lag,
+autoML7 <- h2o.automl(training_frame = train_h_MLAuto,
                       x = x,
                       y = y,
                       nfolds = 5,
                       max_runtime_secs = 60*20,
                       seed = 1234)
 
-test_h_MLAuto_lag$pred_autoML <- h2o.predict(autoML7@leader, test_h_MLAuto_lag)
-test_7 <- as.data.frame(test_h_MLAuto_lag)
+test_h_MLAuto$pred_autoML <- h2o.predict(autoML7@leader, test_h_MLAuto)
+test_7 <- as.data.frame(test_h_MLAuto)
 plot_ly(data = test_7) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_autoML, name = "autoML") %>%
@@ -1514,37 +1579,105 @@ temint_df_MMLAuto <- tibble(date = dato_interior$Fecha,
                             v = humedad_exterior_ts)
 head(temint_df_MMLAuto)
 
-temint_df_MMLAuto$lag72 <- dplyr::lag(as.numeric(temint_df_MMLAuto$y), n = 72)
-
-temint_df_MMLAuto$trend <- decompose(temperatura_interior_ts)$trend
-temint_df_MMLAuto$seasonal <- decompose(temperatura_interior_ts)$seasonal
-temint_df_MMLAuto$trend_sqr <- (decompose(temperatura_interior_ts)$trend^ 2)
-
-temint_df_MMLAuto$tetrend <- decompose(temperatura_exterior_ts)$trend
-temint_df_MMLAuto$teseasonal <- decompose(temperatura_exterior_ts)$seasonal
-temint_df_MMLAuto$tetrend_sqr <- (decompose(temperatura_exterior_ts)$trend^ 2)
-
-temint_df_MMLAuto$hitrend <- decompose(humedad_interior_ts)$trend
-temint_df_MMLAuto$hiseasonal <- decompose(humedad_interior_ts)$seasonal
-temint_df_MMLAuto$hitrend_sqr <- (decompose(humedad_interior_ts)$trend^ 2)
-
-temint_df_MMLAuto$hetrend <- decompose(humedad_exterior_ts)$trend
-temint_df_MMLAuto$heseasonal <- decompose(humedad_exterior_ts)$seasonal
-temint_df_MMLAuto$hetrend_sqr <- (decompose(humedad_exterior_ts)$trend^ 2)
+# temint_df_MMLAuto$lag72 <- dplyr::lag(as.numeric(temint_df_MMLAuto$y), n = 72)
+# 
+# temint_df_MMLAuto$trend <- decompose(temperatura_interior_ts)$trend
+# temint_df_MMLAuto$seasonal <- decompose(temperatura_interior_ts)$seasonal
+# temint_df_MMLAuto$trend_sqr <- (decompose(temperatura_interior_ts)$trend^ 2)
+# 
+# temint_df_MMLAuto$tetrend <- decompose(temperatura_exterior_ts)$trend
+# temint_df_MMLAuto$teseasonal <- decompose(temperatura_exterior_ts)$seasonal
+# temint_df_MMLAuto$tetrend_sqr <- (decompose(temperatura_exterior_ts)$trend^ 2)
+# 
+# temint_df_MMLAuto$hitrend <- decompose(humedad_interior_ts)$trend
+# temint_df_MMLAuto$hiseasonal <- decompose(humedad_interior_ts)$seasonal
+# temint_df_MMLAuto$hitrend_sqr <- (decompose(humedad_interior_ts)$trend^ 2)
+# 
+# temint_df_MMLAuto$hetrend <- decompose(humedad_exterior_ts)$trend
+# temint_df_MMLAuto$heseasonal <- decompose(humedad_exterior_ts)$seasonal
+# temint_df_MMLAuto$hetrend_sqr <- (decompose(humedad_exterior_ts)$trend^ 2)
 
 h <- 627
 
+teminterior_split <- ts_split(temperatura_interior_ts, sample.out = h)
+teminterior.train.ts <- teminterior_split$train
+teminterior.test.ts <- teminterior_split$test
+
+temint_train_MMLAuto<- temint_df_MMLAuto[1:(unidades - h), ]
+temint_test_MMLAuto<- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
+
+temint_train_MMLAuto$trend <- decompose(teminterior.train.ts)$trend
+temint_train_MMLAuto$seasonal <- decompose(teminterior.train.ts)$seasonal
+temint_train_MMLAuto$trend_sqr <- (decompose(teminterior.train.ts)$trend)^2
+temint_train_MMLAuto$lag72 <- dplyr::lag(as.numeric(teminterior.train.ts), n = 72)
+
+temint_train_MMLAuto$hitrend <- decompose(huminterior.train.ts)$trend
+temint_train_MMLAuto$hiseasonal <- decompose(huminterior.train.ts)$seasonal
+temint_train_MMLAuto$hitrend_sqr <- (decompose(huminterior.train.ts)$trend)^2
+
+temint_train_MMLAuto$tetrend <- decompose(temexterior.train.ts)$trend
+temint_train_MMLAuto$teseasonal <- decompose(temexterior.train.ts)$seasonal
+temint_train_MMLAuto$tetrend_sqr <- (decompose(temexterior.train.ts)$trend)^2
+
+temint_train_MMLAuto$hetrend <- decompose(humexterior.train.ts)$trend
+temint_train_MMLAuto$heseasonal <- decompose(humexterior.train.ts)$seasonal
+temint_train_MMLAuto$hetrend_sqr <- (decompose(humexterior.train.ts)$trend)^2
+
+temint_test_MMLAuto$trend <- decompose(teminterior.test.ts)$trend
+temint_test_MMLAuto$seasonal <- decompose(teminterior.test.ts)$seasonal
+temint_test_MMLAuto$trend_sqr <- (decompose(teminterior.test.ts)$trend)^2
+temint_test_MMLAuto$lag72 <- dplyr::lag(as.numeric(teminterior.test.ts), n = 72)
+
+temint_test_MMLAuto$hitrend <- decompose(huminterior.test.ts)$trend
+temint_test_MMLAuto$hiseasonal <- decompose(huminterior.test.ts)$seasonal
+temint_test_MMLAuto$hitrend_sqr <- (decompose(huminterior.test.ts)$trend)^2
+
+temint_test_MMLAuto$tetrend <- decompose(temexterior.test.ts)$trend
+temint_test_MMLAuto$teseasonal <- decompose(temexterior.test.ts)$seasonal
+temint_test_MMLAuto$tetrend_sqr <- (decompose(temexterior.test.ts)$trend)^2
+
+temint_test_MMLAuto$hetrend <- decompose(humexterior.test.ts)$trend
+temint_test_MMLAuto$heseasonal <- decompose(humexterior.test.ts)$seasonal
+temint_test_MMLAuto$hetrend_sqr <- (decompose(humexterior.test.ts)$trend)^2
+
+temint_train_MMLAuto$trend <- as.vector(temint_train_MMLAuto$trend)
+temint_train_MMLAuto$seasonal <- as.vector(temint_train_MMLAuto$seasonal)
+temint_train_MMLAuto$trend_sqr <- as.vector(temint_train_MMLAuto$trend_sqr)
+temint_train_MMLAuto$lag72 <- as.vector(temint_train_MMLAuto$lag72)
+temint_train_MMLAuto$hitrend <- as.vector(temint_train_MMLAuto$hitrend)
+temint_train_MMLAuto$hiseasonal <- as.vector(temint_train_MMLAuto$hiseasonal)
+temint_train_MMLAuto$hitrend_sqr <- as.vector(temint_train_MMLAuto$hitrend_sqr)
+temint_train_MMLAuto$tetrend <- as.vector(temint_train_MMLAuto$tetrend)
+temint_train_MMLAuto$teseasonal <- as.vector(temint_train_MMLAuto$teseasonal)
+temint_train_MMLAuto$tetrend_sqr <- as.vector(temint_train_MMLAuto$tetrend_sqr)
+temint_train_MMLAuto$hetrend <- as.vector(temint_train_MMLAuto$hetrend)
+temint_train_MMLAuto$heseasonal <- as.vector(temint_train_MMLAuto$heseasonal)
+temint_train_MMLAuto$hetrend_sqr <- as.vector(temint_train_MMLAuto$hetrend_sqr)
+temint_test_MMLAuto$trend <- as.vector(temint_test_MMLAuto$trend)
+temint_test_MMLAuto$seasonal <- as.vector(temint_test_MMLAuto$seasonal)
+temint_test_MMLAuto$trend_sqr <- as.vector(temint_test_MMLAuto$trend_sqr)
+temint_test_MMLAuto$lag72 <- as.vector(temint_test_MMLAuto$lag72)
+temint_test_MMLAuto$hitrend <- as.vector(temint_test_MMLAuto$hitrend)
+temint_test_MMLAuto$hiseasonal <- as.vector(temint_test_MMLAuto$hiseasonal)
+temint_test_MMLAuto$hitrend_sqr <- as.vector(temint_test_MMLAuto$hitrend_sqr)
+temint_test_MMLAuto$tetrend <- as.vector(temint_test_MMLAuto$tetrend)
+temint_test_MMLAuto$teseasonal <- as.vector(temint_test_MMLAuto$teseasonal)
+temint_test_MMLAuto$tetrend_sqr <- as.vector(temint_test_MMLAuto$tetrend_sqr)
+temint_test_MMLAuto$hetrend <- as.vector(temint_test_MMLAuto$hetrend)
+temint_test_MMLAuto$heseasonal <- as.vector(temint_test_MMLAuto$heseasonal)
+temint_test_MMLAuto$hetrend_sqr <- as.vector(temint_test_MMLAuto$hetrend_sqr)
+
+h2o.init(max_mem_size = "16G")
+
+train_h_MMLAuto <- as.h2o(temint_train_MMLAuto)
+test_h_MMLAuto <- as.h2o(temint_test_MMLAuto)
+
 ############ TEMPERATURA INTERIOR
 #### TENDENCIA Y ESTACIONALIDAD
-temint_train_MMLAuto_TItrendseas <- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendseas <- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendseas <- as.h2o(temint_train_MMLAuto_TItrendseas)
-test_h_MMLAuto_TItrendseas <- as.h2o(temint_test_MMLAuto_TItrendseas)
 x <- c("trend", "seasonal")
 y <- "y"
 autoML11 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendseas,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1553,8 +1686,8 @@ autoML11 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML11)
-test_h_MMLAuto_TItrendseas$pred_gbm <- h2o.predict(autoML11, test_h_MMLAuto_TItrendseas)
-test_25 <- as.data.frame(test_h_MMLAuto_TItrendseas)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML11, test_h_MMLAuto)
+test_25 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_25) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1569,15 +1702,10 @@ sum((test_25$y - test_25$pred_gbm) , na.rm = TRUE) / nrow(test_25)
 sum(abs((test_25$y - test_25$pred_gbm)/ nrow(test_25)) , na.rm = TRUE)  #MAPE
 
 #### TENDENCIA Y LAG72
-temint_train_MMLAuto_TItrendlag <- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendlag <- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendlag <- as.h2o(temint_train_MMLAuto_TItrendlag)
-test_h_MMLAuto_TItrendlag <- as.h2o(temint_test_MMLAuto_TItrendlag)
 x <- c("trend", "lag72")
 y <- "y"
 autoML12 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendlag,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1586,8 +1714,8 @@ autoML12 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML12)
-test_h_MMLAuto_TItrendlag$pred_gbm <- h2o.predict(autoML12, test_h_MMLAuto_TItrendlag)
-test_26 <- as.data.frame(test_h_MMLAuto_TItrendlag)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML12, test_h_MMLAuto)
+test_26 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_26) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1602,15 +1730,10 @@ sum((test_26$y - test_26$pred_gbm) , na.rm = TRUE) / nrow(test_26)
 sum(abs((test_26$y - test_26$pred_gbm)/ nrow(test_26)) , na.rm = TRUE)  #MAPE
 
 #### TENDENCIA, ESTACIONALIDAD Y LAG72
-temint_train_MMLAuto_TItrendseaslag <- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendseaslag <- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendseaslag <- as.h2o(temint_train_MMLAuto_TItrendseaslag)
-test_h_MMLAuto_TItrendseaslag <- as.h2o(temint_test_MMLAuto_TItrendseaslag)
 x <- c("trend", "seasonal","lag72")
 y <- "y"
 autoML13 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendseaslag,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1619,8 +1742,8 @@ autoML13 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML13)
-test_h_MMLAuto_TItrendseaslag$pred_gbm <- h2o.predict(autoML13, test_h_MMLAuto_TItrendseaslag)
-test_27 <- as.data.frame(test_h_MMLAuto_TItrendseaslag)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML13, test_h_MMLAuto)
+test_27 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_27) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1635,16 +1758,10 @@ sum((test_27$y - test_27$pred_gbm) , na.rm = TRUE) / nrow(test_27)
 sum(abs((test_27$y - test_27$pred_gbm)/ nrow(test_27)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO
-
-temint_train_MMLAuto_TItrendseaslagsqr <- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendseaslagsqr <- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendseaslagsqr <- as.h2o(temint_train_MMLAuto_TItrendseaslagsqr)
-test_h_MMLAuto_TItrendseaslagsqr <- as.h2o(temint_test_MMLAuto_TItrendseaslagsqr)
 x <- c("trend", "seasonal","lag72", "trend_sqr")
 y <- "y"
 autoML14 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendseaslagsqr,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1653,8 +1770,8 @@ autoML14 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML14)
-test_h_MMLAuto_TItrendseaslagsqr$pred_gbm <- h2o.predict(autoML14, test_h_MMLAuto_TItrendseaslagsqr)
-test_28 <- as.data.frame(test_h_MMLAuto_TItrendseaslagsqr)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML14, test_h_MMLAuto)
+test_28 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_28) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1670,16 +1787,10 @@ sum(abs((test_28$y - test_28$pred_gbm)/ nrow(test_28)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # HI TENDENCIA
-
-temint_train_MMLAuto_TItrendseaslagsqrHItrend <- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendseaslagsqrHItrend <- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendseaslagsqrHItrend <- as.h2o(temint_train_MMLAuto_TItrendseaslagsqrHItrend)
-test_h_MMLAuto_TItrendseaslagsqrHItrend <- as.h2o(temint_test_MMLAuto_TItrendseaslagsqrHItrend)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "hitrend")
 y <- "y"
 autoML15 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendseaslagsqrHItrend,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1688,8 +1799,8 @@ autoML15 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML15)
-test_h_MMLAuto_TItrendseaslagsqrHItrend$pred_gbm <- h2o.predict(autoML15, test_h_MMLAuto_TItrendseaslagsqrHItrend)
-test_29 <- as.data.frame(test_h_MMLAuto_TItrendseaslagsqrHItrend)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML15, test_h_MMLAuto)
+test_29 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_29) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1705,16 +1816,10 @@ sum(abs((test_29$y - test_29$pred_gbm)/ nrow(test_29)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # HI TENDENCIA, ESTACIONALIDAD
-
-temint_train_MMLAuto_TItrendseaslagsqrHItrendseas <- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendseaslagsqrHItrendseas <- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendseaslagsqrHItrendseas <- as.h2o(temint_train_MMLAuto_TItrendseaslagsqrHItrendseas)
-test_h_MMLAuto_TItrendseaslagsqrHItrendseas <- as.h2o(temint_test_MMLAuto_TItrendseaslagsqrHItrendseas)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "hitrend", "hiseasonal")
 y <- "y"
 autoML16 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendseaslagsqrHItrendseas,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1723,8 +1828,8 @@ autoML16 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML16)
-test_h_MMLAuto_TItrendseaslagsqrHItrendseas$pred_gbm <- h2o.predict(autoML16, test_h_MMLAuto_TItrendseaslagsqrHItrendseas)
-test_30 <- as.data.frame(test_h_MMLAuto_TItrendseaslagsqrHItrendseas)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML16, test_h_MMLAuto)
+test_30 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_30) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1740,16 +1845,10 @@ sum(abs((test_30$y - test_30$pred_gbm)/ nrow(test_30)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # HI TENDENCIA, ESTACIONALIDAD Y TENDENCIA CUADRADO
-
-temint_train_MMLAuto_TItrendseaslagsqrHItrendseassqr <- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendseaslagsqrHItrendseassqr <- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendseaslagsqrHItrendseassqr <- as.h2o(temint_train_MMLAuto_TItrendseaslagsqrHItrendseassqr)
-test_h_MMLAuto_TItrendseaslagsqrHItrendseassqr <- as.h2o(temint_test_MMLAuto_TItrendseaslagsqrHItrendseassqr)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "hitrend", "hiseasonal", "hitrend_sqr")
 y <- "y"
 autoML17 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendseaslagsqrHItrendseassqr,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1758,8 +1857,8 @@ autoML17 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML17)
-test_h_MMLAuto_TItrendseaslagsqrHItrendseassqr$pred_gbm <- h2o.predict(autoML17, test_h_MMLAuto_TItrendseaslagsqrHItrendseassqr)
-test_31 <- as.data.frame(test_h_MMLAuto_TItrendseaslagsqrHItrendseassqr)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML17, test_h_MMLAuto)
+test_31 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_31) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1775,16 +1874,10 @@ sum(abs((test_31$y - test_31$pred_gbm)/ nrow(test_31)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # TE TENDENCIA
-
-temint_train_MMLAuto_TItrendseaslagsqrTEtrend <- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendseaslagsqrTEtrend <- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendseaslagsqrTEtrend <- as.h2o(temint_train_MMLAuto_TItrendseaslagsqrTEtrend)
-test_h_MMLAuto_TItrendseaslagsqrTEtrend <- as.h2o(temint_test_MMLAuto_TItrendseaslagsqrTEtrend)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "tetrend")
 y <- "y"
 autoML18 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendseaslagsqrTEtrend,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1793,8 +1886,8 @@ autoML18 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML18)
-test_h_MMLAuto_TItrendseaslagsqrTEtrend$pred_gbm <- h2o.predict(autoML18, test_h_MMLAuto_TItrendseaslagsqrTEtrend)
-test_32 <- as.data.frame(test_h_MMLAuto_TItrendseaslagsqrTEtrend)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML18, test_h_MMLAuto)
+test_32 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_32) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1810,16 +1903,10 @@ sum(abs((test_32$y - test_32$pred_gbm)/ nrow(test_32)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # TE TENDENCIA, ESTACIONALIDAD
-
-temint_train_MMLAuto_TItrendseaslagsqrTEtrendseas<- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendseaslagsqrTEtrendseas<- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendseaslagsqrTEtrendseas<- as.h2o(temint_train_MMLAuto_TItrendseaslagsqrTEtrendseas)
-test_h_MMLAuto_TItrendseaslagsqrTEtrendseas<- as.h2o(temint_test_MMLAuto_TItrendseaslagsqrTEtrendseas)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "tetrend", "teseasonal")
 y <- "y"
 autoML19 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendseaslagsqrTEtrendseas,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1828,8 +1915,8 @@ autoML19 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML19)
-test_h_MMLAuto_TItrendseaslagsqrTEtrendseas$pred_gbm <- h2o.predict(autoML19, test_h_MMLAuto_TItrendseaslagsqrTEtrendseas)
-test_33 <- as.data.frame(test_h_MMLAuto_TItrendseaslagsqrTEtrendseas)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML19, test_h_MMLAuto)
+test_33 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_33) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1845,16 +1932,10 @@ sum(abs((test_33$y - test_33$pred_gbm)/ nrow(test_33)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # TE TENDENCIA, ESTACIONALIDAD Y TENDENCIA CUADRADO
-
-temint_train_MMLAuto_TItrendseaslagsqrTEtrendseassqr<- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendseaslagsqrTEtrendseassqr<- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendseaslagsqrTEtrendseassqr<- as.h2o(temint_train_MMLAuto_TItrendseaslagsqrTEtrendseassqr)
-test_h_MMLAuto_TItrendseaslagsqrTEtrendseassqr<- as.h2o(temint_test_MMLAuto_TItrendseaslagsqrTEtrendseassqr)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "tetrend", "teseasonal", "tetrend_sqr")
 y <- "y"
 autoML20 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendseaslagsqrTEtrendseassqr,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1863,8 +1944,8 @@ autoML20 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML20)
-test_h_MMLAuto_TItrendseaslagsqrTEtrendseassqr$pred_gbm <- h2o.predict(autoML20, test_h_MMLAuto_TItrendseaslagsqrTEtrendseassqr)
-test_34 <- as.data.frame(test_h_MMLAuto_TItrendseaslagsqrTEtrendseassqr)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML20, test_h_MMLAuto)
+test_34 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_34) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1880,16 +1961,10 @@ sum(abs((test_34$y - test_34$pred_gbm)/ nrow(test_34)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # HE TENDENCIA
-
-temint_train_MMLAuto_TItrendseaslagsqrHEtrend<- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendseaslagsqrHEtrend<- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendseaslagsqrHEtrend<- as.h2o(temint_train_MMLAuto_TItrendseaslagsqrHEtrend)
-test_h_MMLAuto_TItrendseaslagsqrHEtrend<- as.h2o(temint_test_MMLAuto_TItrendseaslagsqrHEtrend)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "hetrend")
 y <- "y"
 autoML21 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendseaslagsqrHEtrend,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1898,8 +1973,8 @@ autoML21 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML21)
-test_h_MMLAuto_TItrendseaslagsqrHEtrend$pred_gbm <- h2o.predict(autoML21, test_h_MMLAuto_TItrendseaslagsqrHEtrend)
-test_35 <- as.data.frame(test_h_MMLAuto_TItrendseaslagsqrHEtrend)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML21, test_h_MMLAuto)
+test_35 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_35) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1915,16 +1990,10 @@ sum(abs((test_35$y - test_35$pred_gbm)/ nrow(test_35)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # HE TENDENCIA, ESTACIONALIDAD
-
-temint_train_MMLAuto_TItrendseaslagsqrHEtrendseas<- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendseaslagsqrHEtrendseas<- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendseaslagsqrHEtrendseas<- as.h2o(temint_train_MMLAuto_TItrendseaslagsqrHEtrendseas)
-test_h_MMLAuto_TItrendseaslagsqrHEtrendseas<- as.h2o(temint_test_MMLAuto_TItrendseaslagsqrHEtrendseas)
 x <- c("trend", "seasonal","lag72", "trend_sqr", "hetrend", "heseasonal")
 y <- "y"
 autoML22 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendseaslagsqrHEtrendseas,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1933,8 +2002,8 @@ autoML22 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML22)
-test_h_MMLAuto_TItrendseaslagsqrHEtrendseas$pred_gbm <- h2o.predict(autoML22, test_h_MMLAuto_TItrendseaslagsqrHEtrendseas)
-test_36 <- as.data.frame(test_h_MMLAuto_TItrendseaslagsqrHEtrendseas)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML22, test_h_MMLAuto)
+test_36 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_36) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1950,16 +2019,10 @@ sum(abs((test_36$y - test_36$pred_gbm)/ nrow(test_36)) , na.rm = TRUE)  #MAPE
 
 #### TI TENDENCIA, ESTACIONALIDAD, LAG72 Y TENDENCIA CUADRADO.
 # HE TENDENCIA, ESTACIONALIDAD Y TENDENCIA CUADRADO
-
-temint_train_MMLAuto_TItrendseaslagsqrHEtrendseassqr<- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TItrendseaslagsqrHEtrendseassqr<- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TItrendseaslagsqrHEtrendseassqr<- as.h2o(temint_train_MMLAuto_TItrendseaslagsqrHEtrendseassqr)
-test_h_MMLAuto_TItrendseaslagsqrHEtrendseassqr<- as.h2o(temint_test_MMLAuto_TItrendseaslagsqrHEtrendseassqr)
-x <- c("trend", "seasonal","lag72", "trend_sqr", "hetrend", "heseasonal")
+x <- c("trend", "seasonal","lag72", "trend_sqr", "hetrend", "heseasonal", "tetrend_sqr")
 y <- "y"
 autoML23 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TItrendseaslagsqrHEtrendseassqr,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -1968,8 +2031,8 @@ autoML23 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML23)
-test_h_MMLAuto_TItrendseaslagsqrHEtrendseassqr$pred_gbm <- h2o.predict(autoML23, test_h_MMLAuto_TItrendseaslagsqrHEtrendseassqr)
-test_37 <- as.data.frame(test_h_MMLAuto_TItrendseaslagsqrHEtrendseassqr)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML23, test_h_MMLAuto)
+test_37 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_37) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
@@ -1987,16 +2050,13 @@ sum(abs((test_37$y - test_37$pred_gbm)/ nrow(test_37)) , na.rm = TRUE)  #MAPE
 # HI TENDENCIA, ESTACIONALIDAD Y TENDENCIA CUADRADO
 # TE TENDENCIA, ESTACIONALIDAD Y TENDENCIA CUADRADO
 # HE TENDENCIA, ESTACIONALIDAD Y TENDENCIA CUADRADO
-
-temint_train_MMLAuto_TITEHIHE<- temint_df_MMLAuto[1:(unidades - h), ]
-temint_test_MMLAuto_TITEHIHE<- temint_df_MMLAuto[(unidades - h + 1):unidades, ]
-h2o.init(max_mem_size = "16G")
-train_h_MMLAuto_TITEHIHE<- as.h2o(temint_train_MMLAuto_TITEHIHE)
-test_h_MMLAuto_TITEHIHE<- as.h2o(temint_test_MMLAuto_TITEHIHE)
-x <- c("trend", "seasonal","lag72", "trend_sqr", "hetrend", "heseasonal")
+x <- c("trend", "seasonal","lag72", "trend_sqr", 
+       "hetrend", "heseasonal", "hetrend_sqr",
+       "tetrend", "teseasonal", "tetrend_sqr",
+       "hitrend", "hiseasonal", "hitrend_sqr")
 y <- "y"
 autoML24 <- h2o.automl(
-  training_frame = train_h_MMLAuto_TITEHIHE,
+  training_frame = train_h_MMLAuto,
   x = x,
   y = y,
   nfolds = 5,
@@ -2005,8 +2065,8 @@ autoML24 <- h2o.automl(
 )
 par(mar=c(0,0,0,0))
 h2o.varimp_plot(autoML24)
-test_h_MMLAuto_TITEHIHE$pred_gbm <- h2o.predict(autoML24, test_h_MMLAuto_TITEHIHE)
-test_38 <- as.data.frame(test_h_MMLAuto_TITEHIHE)
+test_h_MMLAuto$pred_gbm <- h2o.predict(autoML24, test_h_MMLAuto)
+test_38 <- as.data.frame(test_h_MMLAuto)
 plot_ly(data = test_38) %>%
   add_lines(x = ~ date, y = ~y, name = "Actual") %>%
   add_lines(x = ~ date, y = ~ pred_gbm, name = "Gradient Boosting Machine",
