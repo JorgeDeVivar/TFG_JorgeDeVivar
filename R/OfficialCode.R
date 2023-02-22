@@ -174,6 +174,23 @@ train_df$hetrend <- decompose(humexterior.train.ts)$trend
 train_df$heseasonal <- decompose(humexterior.train.ts)$seasonal
 train_df$hetrend_sqr <- (decompose(humexterior.train.ts)$trend)^2
 
+test_df$trend <- decompose(teminterior.test.ts)$trend
+test_df$seasonal <- decompose(teminterior.test.ts)$seasonal
+test_df$trend_sqr <- (decompose(teminterior.test.ts)$trend)^2
+test_df$lag72 <- dplyr::lag(as.numeric(teminterior.test.ts), n = 72)
+
+test_df$hitrend <- decompose(huminterior.test.ts)$trend
+test_df$hiseasonal <- decompose(huminterior.test.ts)$seasonal
+test_df$hitrend_sqr <- (decompose(huminterior.test.ts)$trend)^2
+
+test_df$tetrend <- decompose(temexterior.test.ts)$trend
+test_df$teseasonal <- decompose(temexterior.test.ts)$seasonal
+test_df$tetrend_sqr <- (decompose(temexterior.test.ts)$trend)^2
+
+test_df$hetrend <- decompose(humexterior.test.ts)$trend
+test_df$heseasonal <- decompose(humexterior.test.ts)$seasonal
+test_df$hetrend_sqr <- (decompose(humexterior.test.ts)$trend)^2
+
 #### UNIVARIABLE
 ######## TEMPERATURA INTERIOR
 # TENDENCIA
