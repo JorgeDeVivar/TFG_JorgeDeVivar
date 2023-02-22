@@ -160,7 +160,7 @@ test_df <- df[(nrow(df) - h + 1):nrow(df), ]
 train_df$trend <- decompose(teminterior.train.ts)$trend
 train_df$seasonal <- decompose(teminterior.train.ts)$seasonal
 train_df$trend_sqr <- (decompose(teminterior.train.ts)$trend)^2
-train_df$lag72 <- dplyr::lag(as.numeric(teminterior.test.ts), n = 72)
+train_df$lag72 <- dplyr::lag(as.numeric(teminterior.train.ts), n = 72)
 
 train_df$hitrend <- decompose(huminterior.train.ts)$trend
 train_df$hiseasonal <- decompose(huminterior.train.ts)$seasonal
