@@ -98,10 +98,10 @@ correlacion <- data.frame(
 )
 
 str(correlacion)
-colnames(correlacion) <- c('TI', 
-                            'HI', 
-                            'TE', 
-                            'HE')
+colnames(correlacion) <- c('Temperatura\nInterior', 
+                           'Humedad\nInterior', 
+                           'Temperatura\nExterior', 
+                           'Humedad\nExterior')
 
 M <- round(cor(correlacion), digits=3)
 
