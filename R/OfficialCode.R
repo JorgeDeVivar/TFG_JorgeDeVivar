@@ -98,10 +98,10 @@ correlacion <- data.frame(
 )
 
 str(correlacion)
-colnames(correlacion) <- c('Temperatura\nInterior', 
-                           'Humedad\nInterior', 
-                           'Temperatura\nExterior', 
-                           'Humedad\nExterior')
+colnames(correlacion) <- c('TI', 
+                            'HI', 
+                            'TE', 
+                            'HE')
 
 M <- round(cor(correlacion), digits=3)
 
@@ -114,6 +114,11 @@ ts_info(temperatura_interior_ts)
 
 ############################# Regresion lineal #################################
 h=627
+teminterior_split <- ts_split(temperatura_interior_ts, sample.out = h)
+train <- teminterior_split$train
+test <- teminterior_split$test
+
+
 teminterior_split <- ts_split(temperatura_interior_ts, sample.out = h)
 teminterior.train.ts <- teminterior_split$train
 teminterior.test.ts <- teminterior_split$test
@@ -209,6 +214,7 @@ fc2_1 <- forecast(md2_1, xreg = cbind(test_df$trend))
 forecast::accuracy(fc1_1, test)
 forecast::accuracy(fc2_1, test)
 
+plot(fc1_1)
 plot(fc2_1)
 
 #ESTACIONALIDAD
