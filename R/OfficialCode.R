@@ -135,7 +135,7 @@ df <- tibble(ds = dato_interior$Fecha,weekday = weekdays(dato_interior$Fecha),
                      dia_muestreo = 1 + (segundos - (segundos %% (3600 *12)))/(3600 *12),
                      segundos_dia_muestreo = segundos - (dia_muestreo-1) * (3600 *12),
                      y = temperatura_interior_ts)
-head(tempint_df)
+head(df)
 
 #df$trend <- decompose(temperatura_interior_ts)$trend
 #df$seasonal <- decompose(temperatura_interior_ts)$seasonal
