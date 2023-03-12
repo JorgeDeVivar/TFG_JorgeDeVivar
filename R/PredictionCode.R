@@ -170,7 +170,7 @@ md2_1 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_1)
-checkresiduals(md2_1)
+checkresiduals(md2_1) # Los residuos no están limpios
 fc1_1 <- forecast(md1_1, newdata = test_df)
 
 test_model_1 <- cbind(
@@ -423,6 +423,7 @@ plot(fc2_10)
 
 # TENDENCIA, HUMEDAD INTERIOR, TEMPERATURA EXTERIOR Y HUMEDAD EXTERIOR
 md1_11 <- tslm(teminterior.train.ts ~ trend + te + hi + he, data = train_df)
+# No he y te estaban altamente correlacionados. Posiblemente no debas cargar ambas variables a la vez en un modelo de regresión
 checkresiduals(md1_11)
 
 x_reg_md2_11 = cbind(
@@ -442,10 +443,10 @@ checkresiduals(md2_11)
 fc1_11 <- forecast(md1_11, newdata = test_df)
 
 test_model_11 <- cbind(
-  train_df$trend,
-  train_df$te,
-  train_df$hi,
-  train_df$he
+  test_df$trend,
+  test_df$te,
+  test_df$hi,
+  test_df$he
 )
 
 fc2_11 <- forecast(md2_11, xreg = na.omit(test_model_11))
@@ -453,6 +454,76 @@ forecast::accuracy(fc1_11, teminterior.test.ts)
 forecast::accuracy(fc2_11, teminterior.test.ts)
 plot(fc1_11)
 plot(fc2_11)
+
+
+# OUTRO
+md1_12 <- tslm(teminterior.train.ts ~ trend + trend_sqr + ti_lag72 + te + hi, data = train_df)
+checkresiduals(md1_12)
+
+x_reg_md2_12 = cbind(
+  train_df$trend,
+  train_df$trend_sqr,
+  train_df$ti_lag72,
+  train_df$te,
+  train_df$hi
+)
+
+md2_12 <- auto.arima(teminterior.train.ts,
+                     xreg = x_reg_md2_12,
+                     seasonal = TRUE,
+                     stepwise = TRUE,
+                     approximation = FALSE)
+summary(md2_12)
+checkresiduals(md2_12) # Los residuos no son correctos.
+fc1_12 <- forecast(md1_12, newdata = test_df)
+
+test_model_12 <- cbind(
+  test_df$trend,
+  test_df$trend_sqr,
+  test_df$ti_lag72,
+  test_df$te,
+  test_df$hi
+)
+
+fc2_12 <- forecast(md2_12, xreg = na.omit(test_model_12))
+forecast::accuracy(fc1_12, teminterior.test.ts)
+forecast::accuracy(fc2_12, teminterior.test.ts)
+plot(fc1_12)
+plot(fc2_12) # Aparece una discontinuidad.
+
+# OUTRO 2
+md1_13 <- tslm(teminterior.train.ts ~ trend + trend_sqr + te + hi, data = train_df)
+checkresiduals(md1_13)
+
+x_reg_md2_13 = cbind(
+  train_df$trend,
+  train_df$trend_sqr,
+  train_df$te,
+  train_df$hi
+)
+
+md2_13 <- auto.arima(teminterior.train.ts,
+                     xreg = x_reg_md2_13,
+                     seasonal = TRUE,
+                     stepwise = TRUE,
+                     approximation = FALSE)
+summary(md2_13)
+checkresiduals(md2_13) # Residuos mal
+fc1_13 <- forecast(md1_13, newdata = test_df)
+
+test_model_13 <- cbind(
+  test_df$trend,
+  test_df$trend_sqr,
+  test_df$te,
+  test_df$hi
+)
+
+fc2_13 <- forecast(md2_13, xreg = na.omit(test_model_13))
+forecast::accuracy(fc1_13, teminterior.test.ts)
+forecast::accuracy(fc2_13, teminterior.test.ts)
+plot(fc1_13)
+plot(fc2_13)
+
 ################################################################################
 
 ########################### ARIMA ##############################################
