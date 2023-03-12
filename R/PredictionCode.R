@@ -140,6 +140,7 @@ head(df)
 
 df$trend <- 1:nrow(df)
 df$ti_lag72 <- dplyr::lag(as.numeric(df$ti), n = 72) # Es lag 72 de temperatura interior
+df$ti_lag3 <- dplyr::lag(as.numeric(df$ti), n = 3) # Es lag 72 de temperatura interior
 df$trend_sqr <- (df$trend)^2
 
 df$te <- temperatura_exterior_ts
@@ -185,7 +186,7 @@ plot(fc2_1) # LINEAL PERO CONCUERDA CON LA TRAYECTORIA DE TESTEO
 
 # TEMPERATURA INTERIOR --> SALE LO MISMO QUE LA TEMPERATURA INTERIOR
 md1_2 <- tslm(teminterior.train.ts ~ ti, data = train_df)
-checkresiduals(md1_2)
+checkresiduals(md1_2) # OK (lógicamente!!)
 
 fc1_2 <- forecast(md1_2, newdata = test_df)
 
@@ -195,7 +196,7 @@ plot(fc1_2) #NO CUENTA AL SER DIREACTAMENTE LOS DATOS DE MUESTREO
 
 # LAG 72 TEMPERATURA INTERIOR
 md1_3 <- tslm(teminterior.train.ts ~ ti_lag72, data = train_df)
-checkresiduals(md1_3)
+checkresiduals(md1_3) # Los residuos no están limpios
 
 x_reg_md2_3 = cbind(
   train_df$ti_lag72
@@ -207,7 +208,7 @@ md2_3 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_3)
-checkresiduals(md2_3)
+checkresiduals(md2_3) # Los residuos están más o menos limpios
 fc1_3 <- forecast(md1_3, newdata = test_df)
 
 test_model_3 <- cbind(
@@ -222,7 +223,7 @@ plot(fc2_3) # DEMASIADO RECTA
 
 # TENDENCIA AL CUADRADO
 md1_4 <- tslm(teminterior.train.ts ~ trend_sqr, data = train_df)
-checkresiduals(md1_4)
+checkresiduals(md1_4) # Los residuos no están limpios
 
 x_reg_md2_4 = cbind(
   train_df$trend_sqr
@@ -249,7 +250,7 @@ plot(fc2_4) # DESCIENDE MUCHO, PERO ES LA SEGUNDA MEJOR
 
 # DIA DE LA SEMANA
 md1_5 <- tslm(teminterior.train.ts ~ weekday, data = train_df)
-checkresiduals(md1_5)
+checkresiduals(md1_5) # Los residuos no están limpios
 
 x_reg_md2_5 = cbind(
   model.matrix(~ weekday,train_df)[,-1]
@@ -278,7 +279,7 @@ plot(fc2_5) # TAMBIEN MUY RECTA
 # SE UTILIZARA LA TENDENCIA COMO BASE PARA 
 # TENDENCIA Y TENDENCIA CUADRADO
 md1_6 <- tslm(teminterior.train.ts ~ trend + trend_sqr, data = train_df)
-checkresiduals(md1_6)
+checkresiduals(md1_6) # Residuos mal
 
 x_reg_md2_6 = cbind(
   train_df$trend,
@@ -291,7 +292,7 @@ md2_6 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_6)
-checkresiduals(md2_6)
+checkresiduals(md2_6) # p-valor malo
 fc1_6 <- forecast(md1_6, newdata = test_df)
 
 test_model_6 <- cbind(
@@ -303,11 +304,11 @@ fc2_6 <- forecast(md2_6, xreg = na.omit(test_model_6))
 forecast::accuracy(fc1_6, teminterior.test.ts)
 forecast::accuracy(fc2_6, teminterior.test.ts)
 plot(fc1_6)
-plot(fc2_6)
+plot(fc2_6) # Tendencia creciente que parece ajustarse poco con los datos reales
 
 # TENDENCIA Y HUMEDAD INTERIOR
 md1_7 <- tslm(teminterior.train.ts ~ trend + hi, data = train_df)
-checkresiduals(md1_7)
+checkresiduals(md1_7) # Residuos mal
 
 x_reg_md2_7 = cbind(
   train_df$trend,
@@ -320,7 +321,7 @@ md2_7 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_7)
-checkresiduals(md2_7)
+checkresiduals(md2_7)  # Residuos mal
 fc1_7 <- forecast(md1_7, newdata = test_df)
 
 test_model_7 <- cbind(
@@ -336,7 +337,7 @@ plot(fc2_7)
 
 # TENDENCIA Y LAG72
 md1_8 <- tslm(teminterior.train.ts ~ trend + ti_lag72, data = train_df)
-checkresiduals(md1_8)
+checkresiduals(md1_8) # No están bien
 
 x_reg_md2_8 = cbind(
   train_df$trend,
@@ -365,7 +366,7 @@ plot(fc2_8)
 
 # TENDENCIA Y TEMPERATURA EXTERIOR
 md1_9 <- tslm(teminterior.train.ts ~ trend + te, data = train_df)
-checkresiduals(md1_9)
+checkresiduals(md1_9)  # No están bien
 
 x_reg_md2_9 = cbind(
   train_df$trend,
@@ -378,7 +379,7 @@ md2_9 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_9)
-checkresiduals(md2_9)
+checkresiduals(md2_9)  # No están bien
 fc1_9 <- forecast(md1_9, newdata = test_df)
 
 test_model_9 <- cbind(
@@ -523,6 +524,66 @@ forecast::accuracy(fc1_13, teminterior.test.ts)
 forecast::accuracy(fc2_13, teminterior.test.ts)
 plot(fc1_13)
 plot(fc2_13)
+
+# OUTRO 3: LAG 3 TEMPERATURA INTERIOR
+md1_14 <- tslm(teminterior.train.ts ~ ti_lag3+ti_lag72, data = train_df)
+checkresiduals(md1_14) # Los residuos no están limpios
+
+x_reg_md2_14 = cbind(
+  train_df$ti_lag3,
+  train_df$ti_lag72
+)
+
+md2_14 <- auto.arima(teminterior.train.ts,
+                    xreg = x_reg_md2_14,
+                    seasonal = TRUE,
+                    stepwise = TRUE,
+                    approximation = FALSE)
+summary(md2_14)
+checkresiduals(md2_14) # Los residuos están decentes
+fc1_14 <- forecast(md1_14, newdata = test_df)
+
+test_model_14 <- cbind(
+  test_df$ti_lag3,
+  test_df$ti_lag72
+)
+
+fc2_14 <- forecast(md2_14, xreg = na.omit(test_model_14))
+forecast::accuracy(fc1_14, teminterior.test.ts)
+forecast::accuracy(fc2_14, teminterior.test.ts)
+plot(fc1_14)
+plot(fc2_14)
+
+# OUTRO 4: LAG 72 TEMPERATURA INTERIOR, HUMEDAD INTERIOR; WEEKDAY
+md1_15 <- tslm(teminterior.train.ts ~ ti_lag72 + hi + weekday, data = train_df)
+checkresiduals(md1_15) # Los residuos no están limpios
+
+x_reg_md2_15 = cbind(
+  train_df$ti_lag72,
+  train_df$hi,
+  model.matrix(~ weekday,train_df)[,-1]
+)
+
+md2_15 <- auto.arima(teminterior.train.ts,
+                     xreg = x_reg_md2_15,
+                     seasonal = TRUE,
+                     stepwise = TRUE,
+                     approximation = FALSE)
+summary(md2_15)
+checkresiduals(md2_15) # Los residuos están decentes
+fc1_15 <- forecast(md1_15, newdata = test_df)
+
+test_model_15 <- cbind(
+  test_df$ti_lag72,
+  test_df$hi,
+  model.matrix(~ weekday,test_df)[,-1]
+)
+
+fc2_15 <- forecast(md2_15, xreg = na.omit(test_model_15))
+forecast::accuracy(fc1_15, teminterior.test.ts)
+forecast::accuracy(fc2_15, teminterior.test.ts)
+plot(fc1_15)
+plot(fc2_15)
 
 ################################################################################
 
