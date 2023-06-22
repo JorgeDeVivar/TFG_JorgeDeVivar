@@ -42,10 +42,10 @@ temperatura_exterior_ts <- ts(data = dato_exterior$`Temperatura (ºC)`[1:unidade
 
 
 # Imagenes de las series temporales
-plot_hi_ts <- TSstudio::ts_plot(humedad_interior_ts, title = "Serie temporal de la humedad interior", Ytitle = "Humedad interior", Xtitle = "Días", Xgrid = TRUE, Ygrid = TRUE)
-plot_ti_ts <- TSstudio::ts_plot(temperatura_interior_ts, title = "Serie temporal de la temperatura interior", Ytitle = "Temperatura interior", Xtitle = "Días", Xgrid = TRUE, Ygrid = TRUE)
-plot_he_ts <- TSstudio::ts_plot(humedad_exterior_ts, title = "Serie temporal de la humedad exterior", Ytitle = "Humedad exterior", Xtitle = "Días", Xgrid = TRUE, Ygrid = TRUE)
-plot_te_ts <- TSstudio::ts_plot(temperatura_exterior_ts, title = "Serie temporal de la temperatura exterior", Ytitle = "Temperatura exterior", Xtitle = "Días", Xgrid = TRUE, Ygrid = TRUE)
+plot_hi_ts <- TSstudio::ts_plot(humedad_interior_ts, title = "Serie temporal de la humedad interior", Ytitle = "Humedad interior (%)", Xtitle = "Días", Xgrid = TRUE, Ygrid = TRUE)
+plot_ti_ts <- TSstudio::ts_plot(temperatura_interior_ts, title = "Serie temporal de la temperatura interior", Ytitle = "Temperatura interior (ºC)", Xtitle = "Días", Xgrid = TRUE, Ygrid = TRUE)
+plot_he_ts <- TSstudio::ts_plot(humedad_exterior_ts, title = "Serie temporal de la humedad exterior", Ytitle = "Humedad exterior (%)", Xtitle = "Días", Xgrid = TRUE, Ygrid = TRUE)
+plot_te_ts <- TSstudio::ts_plot(temperatura_exterior_ts, title = "Serie temporal de la temperatura exterior", Ytitle = "Temperatura exterior (ºC)", Xtitle = "Días", Xgrid = TRUE, Ygrid = TRUE)
 
 
 # Guardar los plots de las series temporales
@@ -105,7 +105,7 @@ colnames(correlacion) <- c('TI',
 
 M <- round(cor(correlacion), digits=3)
 
-corrplot::corrplot.mixed(M)
+corrplot::corrplot.mixed(M, lower.col = "black", number.cex = 1)
 
 ######### A continuacion, se mostraran las predicciones de los datos anteriores
 # Se quiere predecir los datos de la temperatura interior
@@ -159,7 +159,7 @@ test_df <- df[(nrow(df) - h + 1):nrow(df), ]
 ########################## UNIVARIABLE
 # TENDENCIA
 md1_1 <- tslm(teminterior.train.ts ~ trend, data = train_df)
-checkresiduals(md1_1)
+checkresiduals(md1_1) ## pvalor muy bajo
 
 x_reg_md2_1 = cbind(
   train_df$trend
@@ -171,7 +171,7 @@ md2_1 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_1)
-checkresiduals(md2_1)
+checkresiduals(md2_1)     ## pvalor aceptable 0.00214
 fc1_1 <- forecast(md1_1, newdata = test_df)
 
 test_model_1 <- cbind(
@@ -196,7 +196,7 @@ plot(fc1_2) #NO CUENTA AL SER DIREACTAMENTE LOS DATOS DE MUESTREO
 
 # LAG 72 TEMPERATURA INTERIOR
 md1_3 <- tslm(teminterior.train.ts ~ ti_lag72, data = train_df)
-checkresiduals(md1_3)
+checkresiduals(md1_3) ## pvalor muy bajo
 
 x_reg_md2_3 = cbind(
   train_df$ti_lag72
@@ -208,7 +208,7 @@ md2_3 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_3)
-checkresiduals(md2_3)
+checkresiduals(md2_3) ## pvalor aceptable 0.551
 fc1_3 <- forecast(md1_3, newdata = test_df)
 
 test_model_3 <- cbind(
@@ -219,11 +219,11 @@ fc2_3 <- forecast(md2_3, xreg = na.omit(test_model_3))
 forecast::accuracy(fc1_3, teminterior.test.ts)
 forecast::accuracy(fc2_3, teminterior.test.ts)
 plot(fc1_3)
-plot(fc2_3) # DEMASIADO RECTA
+plot(fc2_3)
 
 # TENDENCIA AL CUADRADO
 md1_4 <- tslm(teminterior.train.ts ~ trend_sqr, data = train_df)
-checkresiduals(md1_4)
+checkresiduals(md1_4) ## pvalor muy bajo
 
 x_reg_md2_4 = cbind(
   train_df$trend_sqr
@@ -235,7 +235,7 @@ md2_4 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_4)
-checkresiduals(md2_4)
+checkresiduals(md2_4) ## pvalor muy bajo
 fc1_4 <- forecast(md1_4, newdata = test_df)
 
 test_model_4 <- cbind(
@@ -250,7 +250,7 @@ plot(fc2_4) # DESCIENDE MUCHO, PERO ES LA SEGUNDA MEJOR
 
 # DIA DE LA SEMANA
 md1_5 <- tslm(teminterior.train.ts ~ weekday, data = train_df)
-checkresiduals(md1_5)
+checkresiduals(md1_5) ## pvalor muy bajo
 
 x_reg_md2_5 = cbind(
   model.matrix(~ weekday,train_df)[,-1]
@@ -262,7 +262,7 @@ md2_5 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_5)
-checkresiduals(md2_5)
+checkresiduals(md2_5) ## pvalor aceptable 0.002138
 fc1_5 <- forecast(md1_5, newdata = test_df)
 
 test_model_5 <- cbind(
@@ -279,7 +279,7 @@ plot(fc2_5) # TAMBIEN MUY RECTA
 # SE UTILIZARA LA TENDENCIA COMO BASE PARA 
 # TENDENCIA Y TENDENCIA CUADRADO
 md1_6 <- tslm(teminterior.train.ts ~ trend + trend_sqr, data = train_df)
-checkresiduals(md1_6)
+checkresiduals(md1_6) ## pvalor muy bajo
 
 x_reg_md2_6 = cbind(
   train_df$trend,
@@ -292,7 +292,7 @@ md2_6 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_6)
-checkresiduals(md2_6)
+checkresiduals(md2_6) ## pvalor aceptable 0.02393
 fc1_6 <- forecast(md1_6, newdata = test_df)
 
 test_model_6 <- cbind(
@@ -308,7 +308,7 @@ plot(fc2_6)
 
 # TENDENCIA Y HUMEDAD INTERIOR
 md1_7 <- tslm(teminterior.train.ts ~ trend + hi, data = train_df)
-checkresiduals(md1_7)
+checkresiduals(md1_7) ## pvalor muy bajo
 
 x_reg_md2_7 = cbind(
   train_df$trend,
@@ -321,7 +321,7 @@ md2_7 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_7)
-checkresiduals(md2_7)
+checkresiduals(md2_7) ## pvalor muy bajo
 fc1_7 <- forecast(md1_7, newdata = test_df)
 
 test_model_7 <- cbind(
@@ -337,7 +337,7 @@ plot(fc2_7)
 
 # TENDENCIA Y LAG72
 md1_8 <- tslm(teminterior.train.ts ~ trend + ti_lag72, data = train_df)
-checkresiduals(md1_8)
+checkresiduals(md1_8) ## pvalor muy bajo
 
 x_reg_md2_8 = cbind(
   train_df$trend,
@@ -350,7 +350,7 @@ md2_8 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_8)
-checkresiduals(md2_8)
+checkresiduals(md2_8) ## pvalor muy bajo
 fc1_8 <- forecast(md1_8, newdata = test_df)
 
 test_model_8 <- cbind(
@@ -366,7 +366,7 @@ plot(fc2_8)
 
 # TENDENCIA Y TEMPERATURA EXTERIOR
 md1_9 <- tslm(teminterior.train.ts ~ trend + te, data = train_df)
-checkresiduals(md1_9)
+checkresiduals(md1_9) ## pvalor muy bajo
 
 x_reg_md2_9 = cbind(
   train_df$trend,
@@ -379,7 +379,7 @@ md2_9 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_9)
-checkresiduals(md2_9)
+checkresiduals(md2_9) ## pvalor aceptable 0.001703
 fc1_9 <- forecast(md1_9, newdata = test_df)
 
 test_model_9 <- cbind(
@@ -395,7 +395,7 @@ plot(fc2_9)
 
 # TENDENCIA Y HUMEDAD EXTERIOR
 md1_10 <- tslm(teminterior.train.ts ~ trend + he, data = train_df)
-checkresiduals(md1_10)
+checkresiduals(md1_10) ## pvalor muy bajo
 
 x_reg_md2_10 = cbind(
   train_df$trend,
@@ -408,7 +408,7 @@ md2_10 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_10)
-checkresiduals(md2_10)
+checkresiduals(md2_10) ## pvalor aceptable 0.002186
 fc1_10 <- forecast(md1_10, newdata = test_df)
 
 test_model_10 <- cbind(
@@ -424,7 +424,7 @@ plot(fc2_10)
 
 # TENDENCIA, HUMEDAD INTERIOR, TEMPERATURA EXTERIOR Y HUMEDAD EXTERIOR
 md1_11 <- tslm(teminterior.train.ts ~ trend + te + hi + he, data = train_df)
-checkresiduals(md1_11)
+checkresiduals(md1_11) ## pvalor muy bajo
 
 x_reg_md2_11 = cbind(
   train_df$trend,
@@ -439,7 +439,7 @@ md2_11 <- auto.arima(teminterior.train.ts,
                     stepwise = TRUE,
                     approximation = FALSE)
 summary(md2_11)
-checkresiduals(md2_11)
+checkresiduals(md2_11) ## pvalor muy bajo
 fc1_11 <- forecast(md1_11, newdata = test_df)
 
 test_model_11 <- cbind(
@@ -457,7 +457,7 @@ plot(fc2_11)
 
 # LAG 72 TEMPERATURA INTERIOR, HUMEDAD INTERIOR Y TEMPERATURA EXTERIOR
 md1_12 <- tslm(teminterior.train.ts ~ ti_lag72 + hi + te, data = train_df)
-checkresiduals(md1_12) # Los residuos no están limpios
+checkresiduals(md1_12) ## pvalor muy bajos
 
 x_reg_md2_12 = cbind(
   train_df$ti_lag72,
@@ -471,7 +471,7 @@ md2_12 <- auto.arima(teminterior.train.ts,
                      stepwise = TRUE,
                      approximation = FALSE)
 summary(md2_12)
-checkresiduals(md2_12) # Los residuos están mas o menos decentes
+checkresiduals(md2_12) ## pvalor aceptables 0.2232
 fc1_12 <- forecast(md1_12, newdata = test_df)
 
 test_model_12 <- cbind(
@@ -488,7 +488,7 @@ plot(fc2_12)
 
 # LAG 72 TEMPERATURA INTERIOR, TENDENCIA, HUMEDAD INTERIOR Y TEMPERATURA EXTERIOR
 md1_13 <- tslm(teminterior.train.ts ~ ti_lag72 + trend + hi + te, data = train_df)
-checkresiduals(md1_13) # Los residuos no están limpios
+checkresiduals(md1_13) ## pvalor muy bajos
 
 x_reg_md2_13 = cbind(
   train_df$trend,
@@ -503,7 +503,7 @@ md2_13 <- auto.arima(teminterior.train.ts,
                      stepwise = TRUE,
                      approximation = FALSE)
 summary(md2_13)
-checkresiduals(md2_13) # Los residuos NO están decentes
+checkresiduals(md2_13) ## pvalor muy bajos
 fc1_13 <- forecast(md1_13, newdata = test_df)
 
 test_model_13 <- cbind(
@@ -521,7 +521,7 @@ plot(fc2_13)
 
 # LAG 3 Y LAG 72 TEMPERATURA INTERIOR 
 md1_14 <- tslm(teminterior.train.ts ~ ti_lag3 + ti_lag72, data = train_df)
-checkresiduals(md1_14) # Los residuos no están limpios
+checkresiduals(md1_14) ## pvalor muy bajos
 
 x_reg_md2_14 = cbind(
   train_df$ti_lag3,
@@ -534,7 +534,7 @@ md2_14 <- auto.arima(teminterior.train.ts,
                      stepwise = TRUE,
                      approximation = FALSE)
 summary(md2_14)
-checkresiduals(md2_14) # Los residuos NO están decentes
+checkresiduals(md2_14) ## pvalor están decentes 0.524
 fc1_14 <- forecast(md1_14, newdata = test_df)
 
 test_model_14 <- cbind(
@@ -550,7 +550,7 @@ plot(fc2_14)
 
 # LAG 72 TEMPERATURA INTERIOR, HUMEDAD INTERIOR Y WEEKDAY
 md1_15 <- tslm(teminterior.train.ts ~ ti_lag72 + hi + weekday, data = train_df)
-checkresiduals(md1_15) # Los residuos no están limpios
+checkresiduals(md1_15) ## pvalor muy bajos
 
 x_reg_md2_15 = cbind(
   train_df$ti_lag72,
@@ -564,7 +564,7 @@ md2_15 <- auto.arima(teminterior.train.ts,
                      stepwise = TRUE,
                      approximation = FALSE)
 summary(md2_15)
-checkresiduals(md2_15) # Los residuos NO están decentes
+checkresiduals(md2_15) ## pvalor están decentes 0.2068
 fc1_15 <- forecast(md1_15, newdata = test_df)
 
 test_model_15 <- cbind(
@@ -581,7 +581,7 @@ plot(fc2_15)
 
 # LAG 72 TEMPERATURA INTERIOR, TEMPERATURA EXTERIOR Y WEEKDAY
 md1_16 <- tslm(teminterior.train.ts ~ ti_lag72 + te + weekday, data = train_df)
-checkresiduals(md1_16) # Los residuos no están limpios
+checkresiduals(md1_16) ## pvalor muy bajos
 
 x_reg_md2_16 = cbind(
   train_df$ti_lag72,
@@ -595,7 +595,7 @@ md2_16 <- auto.arima(teminterior.train.ts,
                      stepwise = TRUE,
                      approximation = FALSE)
 summary(md2_16)
-checkresiduals(md2_16) # Los residuos NO están decentes
+checkresiduals(md2_16) ## pvalor están decentes 0.4845
 fc1_16 <- forecast(md1_16, newdata = test_df)
 
 test_model_16 <- cbind(
@@ -612,7 +612,7 @@ plot(fc2_16)
 
 # LAG 72 TEMPERATURA INTERIOR, HUMEDAD INTERIOR, TEMPERATURA EXTERIOR Y WEEKDAY
 md1_17 <- tslm(teminterior.train.ts ~ ti_lag72 + hi + te + weekday, data = train_df)
-checkresiduals(md1_17) # Los residuos no están limpios
+checkresiduals(md1_17) ## pvalor muy bajos
 
 x_reg_md2_17 = cbind(
   train_df$ti_lag72,
@@ -627,7 +627,7 @@ md2_17 <- auto.arima(teminterior.train.ts,
                      stepwise = TRUE,
                      approximation = FALSE)
 summary(md2_17)
-checkresiduals(md2_17) # Los residuos NO están decentes
+checkresiduals(md2_17) ## pvalor están decentes 0.2083
 fc1_17 <- forecast(md1_17, newdata = test_df)
 
 test_model_17 <- cbind(
@@ -645,7 +645,7 @@ plot(fc2_17)
 
 # LAG 72 TEMPERATURA INTERIOR Y HUMEDAD EXTERIOR
 md1_18 <- tslm(teminterior.train.ts ~ ti_lag72 + he, data = train_df)
-checkresiduals(md1_18) # Los residuos no están limpios
+checkresiduals(md1_18) ## pvalor muy bajos
 
 x_reg_md2_18 = cbind(
   train_df$ti_lag72,
@@ -658,7 +658,7 @@ md2_18 <- auto.arima(teminterior.train.ts,
                      stepwise = TRUE,
                      approximation = FALSE)
 summary(md2_18)
-checkresiduals(md2_18) # Los residuos están decentes
+checkresiduals(md2_18) ## pvalor están decentillos 0.6074
 fc1_18 <- forecast(md1_18, newdata = test_df)
 
 test_model_18 <- cbind(
@@ -674,7 +674,7 @@ plot(fc2_18)
 
 # LAG 72 TEMPERATURA INTERIOR, HUMEDAD EXTERIOR Y TENDENCIA
 md1_19 <- tslm(teminterior.train.ts ~ ti_lag72 + he + trend, data = train_df)
-checkresiduals(md1_19) # Los residuos no están limpios
+checkresiduals(md1_19) ## pvalor muy bajo
 
 x_reg_md2_19 = cbind(
   train_df$ti_lag72,
@@ -688,7 +688,7 @@ md2_19 <- auto.arima(teminterior.train.ts,
                      stepwise = TRUE,
                      approximation = FALSE)
 summary(md2_19)
-checkresiduals(md2_19) # Los residuos NO están decentes
+checkresiduals(md2_19) ## pvalor muy bajo
 fc1_19 <- forecast(md1_19, newdata = test_df)
 
 test_model_19 <- cbind(
@@ -705,7 +705,7 @@ plot(fc2_19)
 
 # LAG 72 TEMPERATURA INTERIOR Y LAG 72 TEMPERATURA EXTERIOR
 md1_20 <- tslm(teminterior.train.ts ~ ti_lag72 + te_lag72, data = train_df)
-checkresiduals(md1_20) # Los residuos no están limpios
+checkresiduals(md1_20) ## pvalor muy bajo
 
 x_reg_md2_20 = cbind(
   train_df$ti_lag72,
@@ -718,7 +718,7 @@ md2_20 <- auto.arima(teminterior.train.ts,
                      stepwise = TRUE,
                      approximation = FALSE)
 summary(md2_20)
-checkresiduals(md2_20) # Los residuos están decentes
+checkresiduals(md2_20) ## pvalor están decentes 0.52266
 fc1_20 <- forecast(md1_20, newdata = test_df)
 
 test_model_20 <- cbind(
@@ -734,7 +734,7 @@ plot(fc2_20)
 
 # LAG 72 TEMPERATURA INTERIOR, LAG 72 TEMPERATURA EXTERIOR Y WEEKDAY
 md1_21 <- tslm(teminterior.train.ts ~ ti_lag72 + te_lag72 + weekday, data = train_df)
-checkresiduals(md1_21) # Los residuos no están limpios
+checkresiduals(md1_21) ## pvalor muy bajos 
 
 x_reg_md2_21 = cbind(
   train_df$ti_lag72,
@@ -748,7 +748,7 @@ md2_21 <- auto.arima(teminterior.train.ts,
                      stepwise = TRUE,
                      approximation = FALSE)
 summary(md2_21)
-checkresiduals(md2_21) # Los residuos están decentes
+checkresiduals(md2_21) ## pvalor decentillo 0.5154
 fc1_21 <- forecast(md1_21, newdata = test_df)
 
 test_model_21 <- cbind(
@@ -775,7 +775,8 @@ ti_auto_md1 <- auto.arima(ti_train)
 
 ti_test_auto1 <- forecast(ti_auto_md1, h = 627)
 forecast::accuracy(ti_test_auto1, ti_test)
-checkresiduals(ti_auto_md1)
+forecast::accuracy(ti_test_auto1, teminterior.test.ts)
+checkresiduals(ti_auto_md1) ## ppvalor muy decente 0.04572
 
 ti_auto_md2 <- auto.arima(ti_train,
                           max.order = 5,
@@ -783,6 +784,8 @@ ti_auto_md2 <- auto.arima(ti_train,
                           d = 1,
                           stepwise = FALSE,
                           approximation = FALSE)
+
+checkresiduals(ti_auto_md2) ## pvalor muy bajo
 
 ti_test_auto2 <- forecast(ti_auto_md2, h = 627)
 forecast::accuracy(ti_test_auto2, ti_test)
@@ -799,6 +802,7 @@ ti_test_log <- ti_split_log$test
 ti_auto_md1_log <- auto.arima(ti_train_log)
 
 ti_test_auto1_log <- forecast(ti_auto_md1_log, h = 627)
+checkresiduals(ti_auto_md1_log) ## pvalor decente 0.00433
 forecast::accuracy(ti_test_auto1_log, ti_test_log)
 
 ti_auto_md2_log <- auto.arima(ti_train,
@@ -809,6 +813,7 @@ ti_auto_md2_log <- auto.arima(ti_train,
                               approximation = FALSE)
 
 ti_test_auto2_log <- forecast(ti_auto_md2_log, h = 627)
+checkresiduals(ti_auto_md2_log) ## pvalor muy bajo
 forecast::accuracy(ti_test_auto2_log, ti_test_log)
 
 plot(ti_test_auto1_log)
@@ -840,7 +845,7 @@ gbm_md_1 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_1)
+h2o.varimp_plot(gbm_md_1) ## valor 1
 test_h$pred_gbm_1 <- h2o.predict(gbm_md_1, test_h)
 test_1 <- as.data.frame(test_h)
 
@@ -853,9 +858,7 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_1$ti - test_1$pred_gbm_1)^2 , na.rm = TRUE ) / nrow(test_1) )
-sum((test_1$ti - test_1$pred_gbm_1) , na.rm = TRUE) / nrow(test_1)
-sum(abs((test_1$ti - test_1$pred_gbm_1)/ nrow(test_1)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_1$pred_gbm_1, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR
 x <- c("ti_lag72")
@@ -875,7 +878,7 @@ gbm_md_2 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_2)
+h2o.varimp_plot(gbm_md_2) ## valor 1
 test_h$pred_gbm_2 <- h2o.predict(gbm_md_2, test_h)
 test_2 <- as.data.frame(test_h)
 
@@ -888,9 +891,7 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_2$ti - test_2$pred_gbm_2)^2 , na.rm = TRUE ) / nrow(test_2) )
-sum((test_2$ti - test_2$pred_gbm_2) , na.rm = TRUE) / nrow(test_2)
-sum(abs((test_2$ti - test_2$pred_gbm_2)/ nrow(test_2)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_2$pred_gbm_2, teminterior.test.ts)
 
 # TENDENCIA AL CUADRADO
 x <- c("trend_sqr")
@@ -910,7 +911,7 @@ gbm_md_3 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_3)
+h2o.varimp_plot(gbm_md_3) ## valor 1
 test_h$pred_gbm_3 <- h2o.predict(gbm_md_3, test_h)
 test_3 <- as.data.frame(test_h)
 
@@ -923,9 +924,8 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_3$ti - test_3$pred_gbm_3)^2 , na.rm = TRUE ) / nrow(test_3) )
-sum((test_3$ti - test_3$pred_gbm_3) , na.rm = TRUE) / nrow(test_3)
-sum(abs((test_3$ti - test_3$pred_gbm_3)/ nrow(test_3)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_3$pred_gbm_3, teminterior.test.ts)
+
 # DIA DE LA SEMANA
 x <- c("weekday")
 y <- "ti"
@@ -944,7 +944,7 @@ gbm_md_4 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_4)
+h2o.varimp_plot(gbm_md_4) # valor 1
 test_h$pred_gbm_4 <- h2o.predict(gbm_md_4, test_h)
 test_4 <- as.data.frame(test_h)
 
@@ -957,9 +957,8 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_4$ti - test_4$pred_gbm_4)^2 , na.rm = TRUE ) / nrow(test_4) )
-sum((test_4$ti - test_4$pred_gbm_4) , na.rm = TRUE) / nrow(test_4)
-sum(abs((test_4$ti - test_4$pred_gbm_4)/ nrow(test_4)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_4$pred_gbm_4, teminterior.test.ts)
+
 ######################### MULTIVARIABLE
 # TENDENCIA Y TENDENCIA CUADRADO
 x <- c("trend", "trend_sqr")
@@ -979,7 +978,7 @@ gbm_md_5 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_5)
+h2o.varimp_plot(gbm_md_5) # trend valor 1 y 0.4 trend_sqr
 test_h$pred_gbm_5 <- h2o.predict(gbm_md_5, test_h)
 test_5 <- as.data.frame(test_h)
 
@@ -992,9 +991,8 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_5$ti - test_5$pred_gbm_5)^2 , na.rm = TRUE ) / nrow(test_5) )
-sum((test_5$ti - test_5$pred_gbm_5) , na.rm = TRUE) / nrow(test_5)
-sum(abs((test_5$ti - test_5$pred_gbm_5)/ nrow(test_5)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_5$pred_gbm_5, teminterior.test.ts)
+
 # TENDENCIA Y HUMEDAD INTERIOR
 x <- c("trend", "hi")
 y <- "ti"
@@ -1013,7 +1011,7 @@ gbm_md_6 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_6)
+h2o.varimp_plot(gbm_md_6) # trend valor 1 y 0.05 hi
 test_h$pred_gbm_6 <- h2o.predict(gbm_md_6, test_h)
 test_6 <- as.data.frame(test_h)
 
@@ -1026,9 +1024,8 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_6$ti - test_6$pred_gbm_6)^2 , na.rm = TRUE ) / nrow(test_6) )
-sum((test_6$ti - test_6$pred_gbm_6) , na.rm = TRUE) / nrow(test_6)
-sum(abs((test_6$ti - test_6$pred_gbm_6)/ nrow(test_6)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_6$pred_gbm_6, teminterior.test.ts)
+
 # TENDENCIA Y LAG72
 x <- c("trend", "ti_lag72")
 y <- "ti"
@@ -1047,7 +1044,7 @@ gbm_md_7 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_7)
+h2o.varimp_plot(gbm_md_7) # trend valor 1 y 0.03 ti_lag72
 test_h$pred_gbm_7 <- h2o.predict(gbm_md_7, test_h)
 test_7 <- as.data.frame(test_h)
 
@@ -1060,9 +1057,8 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_7$ti - test_7$pred_gbm_7)^2 , na.rm = TRUE ) / nrow(test_7) )
-sum((test_7$ti - test_7$pred_gbm_7) , na.rm = TRUE) / nrow(test_7)
-sum(abs((test_7$ti - test_7$pred_gbm_7)/ nrow(test_7)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_7$pred_gbm_7, teminterior.test.ts)
+
 # TENDENCIA Y TEMPERATURA EXTERIOR
 x <- c("trend", "te")
 y <- "ti"
@@ -1081,7 +1077,7 @@ gbm_md_8 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_8)
+h2o.varimp_plot(gbm_md_8) # trend valor 1 y 0.03 te
 test_h$pred_gbm_8 <- h2o.predict(gbm_md_8, test_h)
 test_8 <- as.data.frame(test_h)
 
@@ -1094,9 +1090,8 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_8$ti - test_8$pred_gbm_8)^2 , na.rm = TRUE ) / nrow(test_8) )
-sum((test_8$ti - test_8$pred_gbm_8) , na.rm = TRUE) / nrow(test_8)
-sum(abs((test_8$ti - test_8$pred_gbm_8)/ nrow(test_8)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_8$pred_gbm_8, teminterior.test.ts)
+
 # TENDENCIA Y HUMEDAD EXTERIOR
 x <- c("trend", "he")
 y <- "ti"
@@ -1115,7 +1110,7 @@ gbm_md_9 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_9)
+h2o.varimp_plot(gbm_md_9) # trend valor 1 y 0.03 he
 test_h$pred_gbm_9 <- h2o.predict(gbm_md_9, test_h)
 test_9 <- as.data.frame(test_h)
 
@@ -1128,9 +1123,8 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_9$ti - test_9$pred_gbm_9)^2 , na.rm = TRUE ) / nrow(test_9) )
-sum((test_9$ti - test_9$pred_gbm_9) , na.rm = TRUE) / nrow(test_9)
-sum(abs((test_9$ti - test_9$pred_gbm_9)/ nrow(test_9)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_9$pred_gbm_9, teminterior.test.ts)
+
 # TENDENCIA, HUMEDAD INTERIOR, TEMPERATURA EXTERIOR Y HUMEDAD EXTERIOR
 x <- c("trend", "hi", "te", "he")
 y <- "ti"
@@ -1149,7 +1143,7 @@ gbm_md_10 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_10)
+h2o.varimp_plot(gbm_md_10) # trend valor 1 y 0.05 hi, 0.03 he y 0.01 te
 test_h$pred_gbm_10 <- h2o.predict(gbm_md_10, test_h)
 test_10 <- as.data.frame(test_h)
 
@@ -1162,9 +1156,7 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_10$ti - test_10$pred_gbm_10)^2 , na.rm = TRUE ) / nrow(test_10) )
-sum((test_10$ti - test_10$pred_gbm_10) , na.rm = TRUE) / nrow(test_10)
-sum(abs((test_10$ti - test_10$pred_gbm_10)/ nrow(test_10)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_10$pred_gbm_10, teminterior.test.ts)
 
 # TENDENCIA, HUMEDAD INTERIOR, TEMPERATURA EXTERIOR Y HUMEDAD EXTERIOR
 x <- c("trend", "hi", "te", "he", "ti_lag72")
@@ -1184,7 +1176,7 @@ gbm_md_11 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_11)
+h2o.varimp_plot(gbm_md_11) # trend valor 1 y 0.05 hi, 0.04 ti_lag72, 0.03 he y 0.01 te
 test_h$pred_gbm_11 <- h2o.predict(gbm_md_11, test_h)
 test_11 <- as.data.frame(test_h)
 
@@ -1197,9 +1189,7 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_11$ti - test_11$pred_gbm_11)^2 , na.rm = TRUE ) / nrow(test_11) )
-sum((test_11$ti - test_11$pred_gbm_11) , na.rm = TRUE) / nrow(test_11)
-sum(abs((test_11$ti - test_11$pred_gbm_11)/ nrow(test_11)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_11$pred_gbm_11, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, HUMEDAD INTERIOR Y TEMPERATURA EXTERIOR
 x <- c("hi", "te", "ti_lag72")
@@ -1219,7 +1209,7 @@ gbm_md_12 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_12)
+h2o.varimp_plot(gbm_md_12) # ti_lag72 valor 1 y 0.6 hi y 0.3 te
 test_h$pred_gbm_12 <- h2o.predict(gbm_md_12, test_h)
 test_12 <- as.data.frame(test_h)
 
@@ -1232,9 +1222,7 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_12$ti - test_12$pred_gbm_12)^2 , na.rm = TRUE ) / nrow(test_12) )
-sum((test_12$ti - test_12$pred_gbm_12) , na.rm = TRUE) / nrow(test_12)
-sum(abs((test_12$ti - test_12$pred_gbm_12)/ nrow(test_12)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_12$pred_gbm_12, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, TENDENCIA, HUMEDAD INTERIOR Y TEMPERATURA EXTERIOR
 x <- c("trend", "hi", "te", "ti_lag72")
@@ -1254,7 +1242,7 @@ gbm_md_13 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_13)
+h2o.varimp_plot(gbm_md_13) # trend valor 1 y 0.1 hi, 0.05 te y 0.01 te 
 test_h$pred_gbm_13 <- h2o.predict(gbm_md_13, test_h)
 test_13 <- as.data.frame(test_h)
 
@@ -1267,11 +1255,9 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_13$ti - test_13$pred_gbm_13)^2 , na.rm = TRUE ) / nrow(test_13) )
-sum((test_13$ti - test_13$pred_gbm_13) , na.rm = TRUE) / nrow(test_13)
-sum(abs((test_13$ti - test_13$pred_gbm_13)/ nrow(test_13)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_13$pred_gbm_13, teminterior.test.ts)
 
-# LAG 3 Y LAG 72 TEMPERATURA INTERIOR
+# LAG 3 Y LAG 72 TEMPERATURA INTERIOR ###ESTE SI
 x <- c("ti_lag3", "ti_lag72")
 y <- "ti"
 
@@ -1289,22 +1275,18 @@ gbm_md_14 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_14)
+h2o.varimp_plot(gbm_md_14) # valor ti_lag3 1 y 0.01 ti_lag72
 test_h$pred_gbm_14 <- h2o.predict(gbm_md_14, test_h)
 test_14 <- as.data.frame(test_h)
 
 plot_ly(data = test_14) %>%
   add_lines(x = ~ ds, y = ~ ti, name = "Actual") %>%
-  add_lines(x = ~ ds, y = ~ pred_gbm_14, name = "Gradient Boosting ML",
-            line = list(dash = "dash")) %>%
-  layout(title = "Temperatura interior - Actual vs. Prediction (Gradient
-Boosting ML)",
+  add_lines(x = ~ ds, y = ~ pred_gbm_14, name = "Gradient Boosting ML") %>%
+  layout(title = "Temperatura interior - Actual vs. Gradient Boosting ML (Lag 3 y Lag72 de Temperatura interior)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_14$ti - test_14$pred_gbm_14)^2 , na.rm = TRUE ) / nrow(test_14) )
-sum((test_14$ti - test_14$pred_gbm_14) , na.rm = TRUE) / nrow(test_14)
-sum(abs((test_14$ti - test_14$pred_gbm_14)/ nrow(test_14)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_14$pred_gbm_14, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, HUMEDAD INTERIOR Y WEEKDAY
 x <- c("weekday", "hi", "ti_lag72")
@@ -1324,7 +1306,7 @@ gbm_md_15 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_15)
+h2o.varimp_plot(gbm_md_15) # valor ti_lag72 1, weekday 0.85 y hi 0.65
 test_h$pred_gbm_15 <- h2o.predict(gbm_md_15, test_h)
 test_15 <- as.data.frame(test_h)
 
@@ -1337,9 +1319,7 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_15$ti - test_15$pred_gbm_15)^2 , na.rm = TRUE ) / nrow(test_15) )
-sum((test_15$ti - test_15$pred_gbm_15) , na.rm = TRUE) / nrow(test_15)
-sum(abs((test_15$ti - test_15$pred_gbm_15)/ nrow(test_15)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_15$pred_gbm_15, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, TEMPERATURA EXTERIOR Y WEEKDAY
 x <- c("weekday", "te", "ti_lag72")
@@ -1359,7 +1339,7 @@ gbm_md_16 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_16)
+h2o.varimp_plot(gbm_md_16) # valor ti_lag72 1, weekday 0.8 y te 0.3
 test_h$pred_gbm_16 <- h2o.predict(gbm_md_16, test_h)
 test_16 <- as.data.frame(test_h)
 
@@ -1372,9 +1352,7 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_16$ti - test_16$pred_gbm_16)^2 , na.rm = TRUE ) / nrow(test_16) )
-sum((test_16$ti - test_16$pred_gbm_16) , na.rm = TRUE) / nrow(test_16)
-sum(abs((test_16$ti - test_16$pred_gbm_16)/ nrow(test_16)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_16$pred_gbm_16, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, HUMEDAD INTERIOR, TEMPERATURA EXTERIOR Y WEEKDAY
 x <- c("hi", "te", "weekday", "ti_lag72")
@@ -1394,7 +1372,7 @@ gbm_md_17 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_17)
+h2o.varimp_plot(gbm_md_17) # valor ti_lag72 1, weekday 0.9, hi 0.65 y te 0.21
 test_h$pred_gbm_17 <- h2o.predict(gbm_md_17, test_h)
 test_17 <- as.data.frame(test_h)
 
@@ -1407,9 +1385,7 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_17$ti - test_17$pred_gbm_17)^2 , na.rm = TRUE ) / nrow(test_17) )
-sum((test_17$ti - test_17$pred_gbm_17) , na.rm = TRUE) / nrow(test_17)
-sum(abs((test_17$ti - test_17$pred_gbm_17)/ nrow(test_17)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_17$pred_gbm_17, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR Y HUMEDAD EXTERIOR
 x <- c("ti_lag72", "he")
@@ -1429,7 +1405,7 @@ gbm_md_18 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_18)
+h2o.varimp_plot(gbm_md_18) # valor ti_lag72 1 y he 0.38
 test_h$pred_gbm_18 <- h2o.predict(gbm_md_18, test_h)
 test_18 <- as.data.frame(test_h)
 
@@ -1442,9 +1418,7 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_18$ti - test_18$pred_gbm_18)^2 , na.rm = TRUE ) / nrow(test_18) )
-sum((test_18$ti - test_18$pred_gbm_18) , na.rm = TRUE) / nrow(test_18)
-sum(abs((test_18$ti - test_18$pred_gbm_18)/ nrow(test_18)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_18$pred_gbm_18, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, HUMEDAD EXTERIOR Y TENDENCIA
 x <- c("trend", "he", "ti_lag72")
@@ -1464,7 +1438,7 @@ gbm_md_19 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_19)
+h2o.varimp_plot(gbm_md_19) # valor trend 1, ti_lag72 0.1 y he 0.09
 test_h$pred_gbm_19 <- h2o.predict(gbm_md_19, test_h)
 test_19 <- as.data.frame(test_h)
 
@@ -1477,9 +1451,7 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_19$ti - test_19$pred_gbm_19)^2 , na.rm = TRUE ) / nrow(test_19) )
-sum((test_19$ti - test_19$pred_gbm_19) , na.rm = TRUE) / nrow(test_19)
-sum(abs((test_19$ti - test_19$pred_gbm_19)/ nrow(test_19)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_19$pred_gbm_19, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR Y LAG 72 TEMPERATURA EXTERIOR
 x <- c("te_lag72", "ti_lag72")
@@ -1499,7 +1471,7 @@ gbm_md_20 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_20)
+h2o.varimp_plot(gbm_md_20) # valor ti_lag72 1 y te_lag72 0.45
 test_h$pred_gbm_20 <- h2o.predict(gbm_md_20, test_h)
 test_20 <- as.data.frame(test_h)
 
@@ -1512,9 +1484,7 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_20$ti - test_20$pred_gbm_20)^2 , na.rm = TRUE ) / nrow(test_20) )
-sum((test_20$ti - test_20$pred_gbm_20) , na.rm = TRUE) / nrow(test_20)
-sum(abs((test_20$ti - test_20$pred_gbm_20)/ nrow(test_20)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_20$pred_gbm_20, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, LAG 72 TEMPERATURA EXTERIOR Y WEEKDAY
 x <- c("te_lag72", "ti_lag72", "weekday")
@@ -1534,7 +1504,7 @@ gbm_md_21 <- h2o.gbm(
 
 
 par(mar=c(0,0,0,0))
-h2o.varimp_plot(gbm_md_21)
+h2o.varimp_plot(gbm_md_21) # valor ti_lag72 1, weekday 0.85 y lag_72 0.35
 test_h$pred_gbm_21 <- h2o.predict(gbm_md_21, test_h)
 test_21 <- as.data.frame(test_h)
 
@@ -1547,9 +1517,7 @@ Boosting ML)",
          yaxis = list(title = "Temperatura (ºC)"),
          xaxis = list(title = "Día"))
 
-sqrt( sum( (test_21$ti - test_21$pred_gbm_21)^2 , na.rm = TRUE ) / nrow(test_21) )
-sum((test_21$ti - test_21$pred_gbm_21) , na.rm = TRUE) / nrow(test_21)
-sum(abs((test_21$ti - test_21$pred_gbm_21)/ nrow(test_21)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_21$pred_gbm_21, teminterior.test.ts)
 
 ################################################################################
 
@@ -1577,9 +1545,7 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_31$ti - test_31$pred_autoML_1)^2 , na.rm = TRUE ) / nrow(test_31) )
-sum((test_31$ti - test_31$pred_autoML_1) , na.rm = TRUE) / nrow(test_31)
-sum(abs((test_31$ti - test_31$pred_autoML_1)/ nrow(test_31)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_31$pred_autoML_1, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR
 x <- c("ti_lag72")
@@ -1603,9 +1569,8 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_32$ti - test_32$pred_autoML_2)^2 , na.rm = TRUE ) / nrow(test_32) )
-sum((test_32$ti - test_32$pred_autoML_2) , na.rm = TRUE) / nrow(test_32)
-sum(abs((test_32$ti - test_32$pred_autoML_2)/ nrow(test_32)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_32$pred_autoML_2, teminterior.test.ts)
+
 # TENDENCIA AL CUADRADO
 x <- c("trend_sqr")
 y <- "ti"
@@ -1628,9 +1593,8 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_33$ti - test_33$pred_autoML_3)^2 , na.rm = TRUE ) / nrow(test_33) )
-sum((test_33$ti - test_33$pred_autoML_3) , na.rm = TRUE) / nrow(test_33)
-sum(abs((test_33$ti - test_33$pred_autoML_3)/ nrow(test_33)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_33$pred_autoML_3, teminterior.test.ts)
+
 # DIA DE LA SEMANA
 x <- c("weekday")
 y <- "ti"
@@ -1653,9 +1617,8 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_34$ti - test_34$pred_autoML_4)^2 , na.rm = TRUE ) / nrow(test_34) )
-sum((test_34$ti - test_34$pred_autoML_4) , na.rm = TRUE) / nrow(test_34)
-sum(abs((test_34$ti - test_34$pred_autoML_4)/ nrow(test_34)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_34$pred_autoML_4, teminterior.test.ts)
+
 ######################### MULTIVARIABLE
 # TENDENCIA Y TENDENCIA CUADRADO
 x <- c("trend", "trend_sqr")
@@ -1679,9 +1642,8 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_35$ti - test_35$pred_autoML_5)^2 , na.rm = TRUE ) / nrow(test_35) )
-sum((test_35$ti - test_35$pred_autoML_5) , na.rm = TRUE) / nrow(test_35)
-sum(abs((test_35$ti - test_35$pred_autoML_5)/ nrow(test_35)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_35$pred_autoML_5, teminterior.test.ts)
+
 # TENDENCIA Y HUMEDAD INTERIOR
 x <- c("trend", "hi")
 y <- "ti"
@@ -1704,9 +1666,8 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_36$ti - test_36$pred_autoML_6)^2 , na.rm = TRUE ) / nrow(test_36) )
-sum((test_36$ti - test_36$pred_autoML_6) , na.rm = TRUE) / nrow(test_36)
-sum(abs((test_36$ti - test_36$pred_autoML_6)/ nrow(test_36)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_36$pred_autoML_6, teminterior.test.ts)
+
 # TENDENCIA Y LAG72
 x <- c("trend", "ti_lag72")
 y <- "ti"
@@ -1729,9 +1690,8 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_37$ti - test_37$pred_autoML_7)^2 , na.rm = TRUE ) / nrow(test_37) )
-sum((test_37$ti - test_37$pred_autoML_7) , na.rm = TRUE) / nrow(test_37)
-sum(abs((test_37$ti - test_37$pred_autoML_7)/ nrow(test_37)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_37$pred_autoML_7, teminterior.test.ts)
+
 # TENDENCIA Y TEMPERATURA EXTERIOR
 x <- c("trend", "te")
 y <- "ti"
@@ -1754,9 +1714,8 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_38$ti - test_38$pred_autoML_8)^2 , na.rm = TRUE ) / nrow(test_38) )
-sum((test_38$ti - test_38$pred_autoML_8) , na.rm = TRUE) / nrow(test_38)
-sum(abs((test_38$ti - test_38$pred_autoML_8)/ nrow(test_38)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_38$pred_autoML_8, teminterior.test.ts)
+
 # TENDENCIA Y HUMEDAD EXTERIOR
 x <- c("trend", "he")
 y <- "ti"
@@ -1768,6 +1727,19 @@ autoML_9 <- h2o.automl(training_frame = train_h,
                        max_runtime_secs = 60*20,
                        seed = 1234)
 
+lb <- autoML_9@leaderboard
+print(lb, n = nrow(lb))
+
+# Get model ids for all models in the AutoML Leaderboard
+model_ids <- as.data.frame(lb$model_id)[,1]
+
+# View variable importance for all the models (besides Stacked Ensemble)
+for (model_id in model_ids) {
+  print(model_id)
+  m <- h2o.getModel(model_id)
+  h2o.varimp(m)
+  h2o.varimp_plot(m)
+}
 
 test_h$pred_autoML_9 <- h2o.predict(autoML_9@leader, test_h)
 test_39 <- as.data.frame(test_h)
@@ -1779,9 +1751,8 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_39$ti - test_39$pred_autoML_9)^2 , na.rm = TRUE ) / nrow(test_39) )
-sum((test_39$ti - test_39$pred_autoML_9) , na.rm = TRUE) / nrow(test_39)
-sum(abs((test_39$ti - test_39$pred_autoML_9)/ nrow(test_39)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_39$pred_autoML_9, teminterior.test.ts)
+
 # TENDENCIA, HUMEDAD INTERIOR, TEMPERATURA EXTERIOR Y HUMEDAD EXTERIOR
 x <- c("trend", "hi", "te", "he")
 y <- "ti"
@@ -1804,9 +1775,8 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_310$ti - test_310$pred_autoML_10)^2 , na.rm = TRUE ) / nrow(test_310) )
-sum((test_310$ti - test_310$pred_autoML_10) , na.rm = TRUE) / nrow(test_310)
-sum(abs((test_310$ti - test_310$pred_autoML_10)/ nrow(test_310)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_310$pred_autoML_10, teminterior.test.ts)
+
 # TENDENCIA, HUMEDAD INTERIOR, TEMPERATURA EXTERIOR, HUMEDAD EXTERIOR Y TI LAG72
 x <- c("trend", "hi", "te", "he", "ti_lag72")
 y <- "ti"
@@ -1829,9 +1799,7 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_311$ti - test_311$pred_autoML_11)^2 , na.rm = TRUE ) / nrow(test_311) )
-sum((test_311$ti - test_311$pred_autoML_11) , na.rm = TRUE) / nrow(test_311)
-sum(abs((test_311$ti - test_311$pred_autoML_11)/ nrow(test_311)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_311$pred_autoML_11, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, HUMEDAD INTERIOR Y TEMPERATURA EXTERIOR
 x <- c("hi", "te", "ti_lag72")
@@ -1855,9 +1823,7 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_312$ti - test_312$pred_autoML_12)^2 , na.rm = TRUE ) / nrow(test_312) )
-sum((test_312$ti - test_312$pred_autoML_12) , na.rm = TRUE) / nrow(test_312)
-sum(abs((test_312$ti - test_312$pred_autoML_12)/ nrow(test_312)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_312$pred_autoML_12, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, TENDENCIA, HUMEDAD INTERIOR Y TEMPERATURA EXTERIOR
 x <- c("trend", "hi", "te", "ti_lag72")
@@ -1881,9 +1847,7 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_313$ti - test_313$pred_autoML_13)^2 , na.rm = TRUE ) / nrow(test_313) )
-sum((test_313$ti - test_313$pred_autoML_13) , na.rm = TRUE) / nrow(test_313)
-sum(abs((test_313$ti - test_313$pred_autoML_13)/ nrow(test_313)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_313$pred_autoML_13, teminterior.test.ts)
 
 # LAG 3 Y LAG 72 TEMPERATURA INTERIOR
 x <- c("ti_lag3", "ti_lag72")
@@ -1896,20 +1860,30 @@ autoML_14 <- h2o.automl(training_frame = train_h,
                         max_runtime_secs = 60*20,
                         seed = 1234)
 
+lb <- autoML_14@leaderboard
+print(lb, n = nrow(lb))
+
+# Get model ids for all models in the AutoML Leaderboard
+model_ids <- as.data.frame(lb$model_id)[,1]
+
+# View variable importance for all the models (besides Stacked Ensemble)
+for (model_id in model_ids) {
+  print(model_id)
+  m <- h2o.getModel(model_id)
+  h2o.varimp(m)
+  h2o.varimp_plot(m)
+}
 
 test_h$pred_autoML_14<- h2o.predict(autoML_14@leader, test_h)
 test_314 <- as.data.frame(test_h)
 plot_ly(data = test_314) %>%
   add_lines(x = ~ ds, y = ~ ti, name = "Actual") %>%
   add_lines(x = ~ ds, y = ~ pred_autoML_14, name = "autoML") %>%
-  layout(title = "Temperatura interior - Actual vs. Prediction (Auto ML
-Model)",
-         yaxis = list(title = "Thousands of Units"),
-         xaxis = list(title = "Month"))
+  layout(title = "Temperatura interior - Actual vs. Auto ML (Lag 3 y Lag72 de Temperatura interior)",
+         yaxis = list(title = "Temperatura (ºC)"),
+         xaxis = list(title = "Días"))
 
-sqrt( sum( (test_314$ti - test_314$pred_autoML_14)^2 , na.rm = TRUE ) / nrow(test_314) )
-sum((test_314$ti - test_314$pred_autoML_14) , na.rm = TRUE) / nrow(test_314)
-sum(abs((test_314$ti - test_314$pred_autoML_14)/ nrow(test_314)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_314$pred_autoML_14, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, HUMEDAD INTERIOR Y WEEKDAY
 x <- c("weekday", "hi", "ti_lag72")
@@ -1933,9 +1907,7 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_315$ti - test_315$pred_autoML_15)^2 , na.rm = TRUE ) / nrow(test_315) )
-sum((test_315$ti - test_315$pred_autoML_15) , na.rm = TRUE) / nrow(test_315)
-sum(abs((test_315$ti - test_315$pred_autoML_15)/ nrow(test_315)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_315$pred_autoML_15, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, TEMPERATURA EXTERIOR Y WEEKDAY
 x <- c("weekday", "te", "ti_lag72")
@@ -1959,9 +1931,7 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_316$ti - test_316$pred_autoML_16)^2 , na.rm = TRUE ) / nrow(test_316) )
-sum((test_316$ti - test_316$pred_autoML_16) , na.rm = TRUE) / nrow(test_316)
-sum(abs((test_316$ti - test_316$pred_autoML_16)/ nrow(test_316)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_316$pred_autoML_16, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, HUMEDAD INTERIOR, TEMPERATURA EXTERIOR Y WEEKDAY
 x <- c("hi", "te", "weekday", "ti_lag72")
@@ -1985,9 +1955,7 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_317$ti - test_317$pred_autoML_17)^2 , na.rm = TRUE ) / nrow(test_317) )
-sum((test_317$ti - test_317$pred_autoML_17) , na.rm = TRUE) / nrow(test_317)
-sum(abs((test_317$ti - test_317$pred_autoML_17)/ nrow(test_317)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_317$pred_autoML_17, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR Y HUMEDAD EXTERIOR
 x <- c("he", "ti_lag72")
@@ -2011,9 +1979,7 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_318$ti - test_318$pred_autoML_18)^2 , na.rm = TRUE ) / nrow(test_318) )
-sum((test_318$ti - test_318$pred_autoML_18) , na.rm = TRUE) / nrow(test_318)
-sum(abs((test_318$ti - test_318$pred_autoML_18)/ nrow(test_318)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_318$pred_autoML_18, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, HUMEDAD EXTERIOR Y TENDENCIA
 x <- c("trend", "he", "ti_lag72")
@@ -2037,9 +2003,7 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_319$ti - test_319$pred_autoML_19)^2 , na.rm = TRUE ) / nrow(test_319) )
-sum((test_319$ti - test_319$pred_autoML_19) , na.rm = TRUE) / nrow(test_319)
-sum(abs((test_319$ti - test_319$pred_autoML_19)/ nrow(test_319)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_319$pred_autoML_19, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR Y LAG 72 TEMPERATURA EXTERIOR
 x <- c("te_lag72", "ti_lag72")
@@ -2063,9 +2027,7 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_320$ti - test_320$pred_autoML_20)^2 , na.rm = TRUE ) / nrow(test_320) )
-sum((test_320$ti - test_320$pred_autoML_20) , na.rm = TRUE) / nrow(test_320)
-sum(abs((test_320$ti - test_320$pred_autoML_20)/ nrow(test_320)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_320$pred_autoML_20, teminterior.test.ts)
 
 # LAG 72 TEMPERATURA INTERIOR, LAG 72 TEMPERATURA EXTERIOR Y WEEKDAY
 x <- c("te_lag72", "ti_lag72", "weekday")
@@ -2089,8 +2051,6 @@ Model)",
          yaxis = list(title = "Thousands of Units"),
          xaxis = list(title = "Month"))
 
-sqrt( sum( (test_321$ti - test_321$pred_autoML_21)^2 , na.rm = TRUE ) / nrow(test_321) )
-sum((test_321$ti - test_321$pred_autoML_21) , na.rm = TRUE) / nrow(test_321)
-sum(abs((test_321$ti - test_321$pred_autoML_21)/ nrow(test_321)) , na.rm = TRUE)  #MAPE
+forecast::accuracy(test_321$pred_autoML_21, teminterior.test.ts)
 
 ################################################################################
